@@ -19,7 +19,9 @@ Put this script somewhere convenient, and optionally add an alias (I use "v"):
 ```
 curl -o avsh https://raw.githubusercontent.com/MasonM/avsh/master/avsh
 chmod +x avsh
-echo "alias v=$(pwd)/avsh" >> ~/.bashrc # optional
+
+# optional:
+echo "alias v=$(pwd)/avsh" >> ~/.bashrc
 ```
 avsh has two configuration setings: the name of the VM to connect to (`AVSH_VM_NAME`) and the
 directory containing the Vagrantfile for that VM (`AVSH_VAGRANTFILE_DIR`). These can be configured
@@ -33,7 +35,7 @@ Run `avsh <command>` to execute a command in the guest VM, or just `avsh` for a 
 you're in a synced folder, it will change to the corresponding directory on the guest before running
 the command or starting the shell. Otherwise, it changes to `/vagrant`.
 
-# Why not a Vagrant plugin?
+# Why not make this a Vagrant plugin?
 
 Because Vagrant has too much overhead. Just running `vagrant version` takes nearly a second on my
 PC, which is enough to be annoying when running tests while developing. avsh has no dependencies, so

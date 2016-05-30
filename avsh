@@ -164,7 +164,7 @@ class SshCommandExecutor
 	def ssh_controlmaster_path
 		# Put the socket file in /tmp/, since that seems like the most portable option that doesn't
 		# require any extra work from the user. This means the socket file will be lost on reboot, but
-		# that just means there will be a minor delay as it re-establishes the socket the next time this
+		# that just means there will be a minor delay as it re-establishes the socket the next time avsh
 		# is run.
 		#
 		# Another option would be to use AVSH_VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
@@ -208,7 +208,8 @@ class SshCommandExecutor
 			"-t", "-t",
 			# Don't execute a command, just go in background immediately
 			"-f", "-N",
-			# Read the SSH config from stdin
+			# Read the SSH config from stdin. Note that /dev/stdin isn't in the POSIX standard, but I
+			# don't know of any modern Unix that doesn't have it.
 			"-F/dev/stdin",
 			# Persist socket indefinitely
 			"-o ControlPersist yes",
