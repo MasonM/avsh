@@ -19,10 +19,11 @@ Put this script somewhere convienent, and optionally add an alias (I use "v"):
 git clone https://github.com/MasonM/bvsh.git
 echo "alias v=$(pwd)/bvsh/bvsh" >> ~/.bashrc # optional
 ```
-
-Configuration can be done by directly editing the options at the top of the script, adding a
-`~/.bvsh_config` Ruby file defining those options, or specify the corresponding environment
-variables.
+bvsh has two configuration setings: the name of the VM to connect to (`VM_NAME`) and the directory
+containing the Vagrantfile for that VM (`VAGRANTFILE_DIR`). These can be configured by either
+directly editing the those constants at the top of the script, adding a `~/.bvsh_config` Ruby file
+defining those constants, or specify the corresponding environment variables (`BVSH_VM_NAME`
+and `BVSH_VAGRANTFILE_DIR`).
 
 # Usage
 
