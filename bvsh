@@ -1,0 +1,207 @@
+#!/usr/bin/env ruby
+
+#### START CONFIGURATION #####
+
+# Name of the Vagrant VM in which to execute commands.
+# Defaults to "dev". Change that or set the BVSH_VM_NAME environment variable.
+VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
+
+# Directory containing the Vagrantfile for the above VM.
+# Defaults to current directory. Change that or set the BVSH_VAGRANTFILE_DIR environment variable.
+VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
+
+#### END CONFIGURATION #####
+
+require 'open3'
+
+def debug(msg)
+	puts msg if ENV.include?('BVSH_DEBUG')
+end
+
+class HostToGuestDirectoryTranslator
+	# Translates a directory on the host with the corresponding directory in the guest by matching
+	# against the synced_folder declarations extracted from the Vagrantfile
+
+	def initialize(vagrantfile_dir)
+		@vagrantfile_dir = vagrantfile_dir
+	end
+
+	def translate(host_directory)
+		# Iterates over the synced_folders dictionary to see if the given directory
+		# is a descendent of (or equal to) one of the src folders.
+		real_host_directory = File.realpath(host_directory)
+		if real_host_directory == @vagrantfile_dir
+			debug "Current directory is the Vagrantfile directory (#{@vagrantfile_dir}, so use '/vagrant'"
+			return '/vagrant'
+		end
+
+		synced_folders = DummyVagrantEnvironment.find_synced_folders(vagrantfile_path)
+		debug "Got synced folders: #{synced_folders}"
+		synced_folders.each do |src, dest|
+			real_src = File.realpath(src, @vagrantfile_dir)
+			if real_host_directory.start_with?(real_src)
+				relative_directory = real_host_directory[real_src.length .. -1]
+				full_directory = File.join(dest, relative_directory)
+				debug "Guest path for '#{real_host_directory}' is '#{full_directory}'"
+				return full_directory
+			end
+		end
+		debug "Couldn't find guest directory for '#{real_host_directory}', falling back to /vagrant"
+		return '/vagrant'
+	end
+
+	private
+
+	def vagrantfile_path
+		# Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we have to check for both.
+		for filename in ['Vagrantfile', 'vagrantfile']
+			path = File.join(@vagrantfile_dir, filename)
+			return path if File.readable? path
+		end
+		raise "Unable to find Vagrantfile in #{@vagrantfile_dir}"
+	end
+end
+
+module DummyVagrantEnvironment
+	# This module is a horrible hack to parse out the synced_folder declarations from a Vagrantfile,
+	# without incurring the overhead of loading Vagrant. It uses a binding object to eval the
+	# Vagrantfile in this module, which will communicate with the dummy Vagrant module below.
+
+	def self.find_synced_folders(vagrantfile_path)
+		debug "Parsing synced folders from #{vagrantfile_path}..."
+
+		# The dummy_configure object will be used to collect the synced_folder declarations. We need to
+		# set it as a class variable on Vagrant, since we can't tell the Vagrantfile to use a specific
+		# instance of Vagrant.
+		dummy_configure = Configure.new
+		Vagrant.class_variable_set(:@@configure, dummy_configure)
+
+		# Eval the Vagrantfile with this module as the execution context
+		binding.eval(File.read(vagrantfile_path), vagrantfile_path)
+
+		dummy_configure.synced_folders
+	end
+
+	module Vagrant
+		# Dummy Vagrant module that stubs out everything except what's needed to extract config details.
+
+		def self.has_plugin?(*args)
+			# Just lie and say we have the plugin, because a Vagrantfile that calls this is probably doing
+			# dependency checking, and will terminate if this doesn't return true. However, this could
+			# result in some strange behavior if the Vagrantfile does weird things like ensuring a plugin
+			# DOESN'T exist. I've never seen that before, though.
+			true
+		end
+
+		def self.configure(api_version)
+			# Yields the Configure object set in DummyVagrantEnvironment.find_synced_folders
+			yield @@configure
+		end
+
+		def self.method_missing(*args) end # ignore everything else
+	end
+
+	class Configure
+		attr_reader :synced_folders
+
+		def initialize
+			@synced_folders = {}
+		end
+
+		def synced_folder(src, dest, *args)
+			@synced_folders[src] = dest unless @synced_folders.include?(src)
+		end
+
+		def method_missing(methodId, *args)
+			yield self if block_given?
+			self
+		end
+	end
+end
+
+class SshCommandExecutor
+	def initialize(vagrantfile_dir, vm_name)
+		@vagrantfile_dir = vagrantfile_dir
+		@vm_name = vm_name
+	end
+
+	def execute(guest_directory, command)
+		if not File.socket?(ssh_controlmaster_path)
+			initialize_master_socket
+		end
+		
+		ssh_command = ["ssh", "-o ControlPath #{ssh_controlmaster_path}"]
+		if command.empty?
+			# No command, so run a login shell
+			command = 'exec $SHELL -l'
+			ssh_command.push('-t') # force TTY allocation
+		end
+		ssh_command.push(@vm_name, "cd #{guest_directory}; #{command}")
+
+		debug "Executing '#{ssh_command}'"
+
+		# Script execution ends here, since SSH will replace the current process.
+		exec(*ssh_command)
+	end
+
+	private
+
+	def ssh_controlmaster_path
+		# Put the socket file in /tmp/, since that seems like the most portable option that doesn't
+		# require any extra work from the user. This means the socket file will be lost on reboot, but
+		# that just means there will be a minor delay as it re-establishes the socket the next time this
+		# is run.
+		#
+		# Another option would be to use VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
+		# manages that directory and I don't think it's safe to be storing foreign files there.
+		"/tmp/vagrant_ssh_wrapper_#{@vm_name}_controlmaster.sock"
+	end
+
+	def ssh_config
+		# Runs "vagrant ssh-config" to get the SSH config, which is needed so we can establish a control
+		# socket using SSH directly.
+		#
+		# The VAGRANT_CWD environment variable tells Vagrant to look for the Vagrantfile in that
+		# directory. See https://www.vagrantup.com/docs/other/environmental-variables.html
+		ssh_config_command = "VAGRANT_CWD=#{@vagrantfile_dir} vagrant ssh-config '#{@vm_name}'"
+		ssh_config = `#{ssh_config_command}`
+		raise "Failed to run \"#{ssh_config_command}\"" unless $?.success?
+		debug "Got SSH config: #{ssh_config}"
+		ssh_config
+	end
+
+	def initialize_master_socket
+		debug "Establishing control socket for '#{@vm_name}' at '#{ssh_controlmaster_path}'"
+
+		# This is mostly based off
+		# https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing#Manually_Establishing_Multiplexed_Connections
+		ssh_cmd = ["ssh", 
+			# Force TTY allocation
+			"-t", "-t",
+			# Don't execute a command, just go in background immediately
+			"-f", "-N",
+			# Read the SSH config from stdin
+			"-F/dev/stdin",
+			# Persist socket indefinitely
+			"-o ControlPersist yes",
+			# Auto-connect
+			"-o ControlMaster auto",
+			# Path to control socket
+			"-o ControlPath #{ssh_controlmaster_path}",
+			# Hostname set in ssh_config
+			"#{@vm_name}"
+		]
+		debug "Executing SSH command '#{ssh_cmd}'"
+		Open3.popen3(*ssh_cmd) do |stdin, stdout, stderr, wait_threads|
+			if stdin.closed?
+				raise "Failed to establish SSH ControlMaster socket. Stderr = '#{stderr.read}'"
+			end
+			stdin.puts(ssh_config)
+		end
+		raise "Failed to establish SSH ControlMaster socket" unless $?.success?
+	end
+end
+
+guest_dir = HostToGuestDirectoryTranslator.new(VAGRANTFILE_DIR).translate(Dir.pwd)
+executor = SshCommandExecutor.new(VAGRANTFILE_DIR, VM_NAME)
+executor.execute(guest_dir, ARGV.join(' '))
