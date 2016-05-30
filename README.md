@@ -1,33 +1,35 @@
 # avsh
 
-avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant ssh`, but is much faster
-and more convienent when working on sync folders. It will automatically set up SSH multiplexing the
-first time it's run, which eliminates the overhead of establishing a SSH connection on subsequent
-invocations. Additionally, it detects when you're working in a synched folder, and automatically
-switches to the corresponding directory on the guest.
+avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant ssh`, but is much
+faster and more convenient when working on synced projects. It automatically sets up SSH
+multiplexing the first time it's run, eliminating SSH connection overhead on subsequent invocations.
+Also, it detects when you're working in a synced folder, and automatically switches to the
+corresponding directory on the guest before executing commands or starting a login shell.
 
 # Requirements
 
-* Unix-like OS. Tested on Ubuntu 15.10 and OS X 10.10.
+* POSIX-compliant OS. Tested on Ubuntu 15.10 and OS X 10.10.
 * OpenSSH 5.6+
 * Ruby 1.9.3+
+* Vagrant 1.0+
 
 # Installation
 
-Put this script somewhere convienent, and optionally add an alias (I use "v"):
+Put this script somewhere convenient, and optionally add an alias (I use "v"):
 ```
-git clone https://github.com/MasonM/avsh.git
-echo "alias v=$(pwd)/avsh/avsh" >> ~/.bashrc # optional
+curl -o avsh https://raw.githubusercontent.com/MasonM/avsh/master/avsh
+chmod +x avsh
+echo "alias v=$(pwd)/avsh" >> ~/.bashrc # optional
 ```
-avsh has two configuration setings: the name of the VM to connect to (`VM_NAME`) and the directory
-containing the Vagrantfile for that VM (`VAGRANTFILE_DIR`). These can be configured by either
-directly editing the those constants at the top of the script, adding a `~/.avsh_config` Ruby file
-defining those constants, or specify the corresponding environment variables (`AVSH_VM_NAME`
-and `AVSH_VAGRANTFILE_DIR`).
+avsh has two configuration setings: the name of the VM to connect to (`AVSH_VM_NAME`) and the
+directory containing the Vagrantfile for that VM (`AVSH_VAGRANTFILE_DIR`). These can be configured
+by either editing the script to change those constants, adding a `~/.avsh_config` file defining them
+(see `avsh_config_example.rb` for an example), or specify the corresponding environment variables
+(`AVSH_VM_NAME` and `AVSH_VAGRANTFILE_DIR`).
 
 # Usage
 
-Run `avsh <command>` to execute a command in the guest VM, or `avsh` for a login shell. If
+Run `avsh <command>` to execute a command in the guest VM, or just `avsh` for a login shell. If
 you're in a synced folder, it will change to the corresponding directory on the guest before running
 the command or starting the shell. Otherwise, it changes to `/vagrant`.
 
