@@ -26,7 +26,7 @@ $ avsh 'echo "host=`hostname`	current directory=$PWD"'
 host=www.jci.dev        current directory=/var/www/jci/content
 
 $ avsh 'grep synced_folder /vagrant/Vagrantfile'
-  config.vm.synced_folder '/home/masonm/asci/, '/var/www/jci'
+  config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
 ```
 
 # Requirements
