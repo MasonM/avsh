@@ -1,22 +1,22 @@
 #!/usr/bin/env ruby
 
 #### START CONFIGURATION #####
-optional_config_file_path = File.absolute_path('~/.bvsh_config')
+optional_config_file_path = File.absolute_path('~/.avsh_config')
 if File.exist?(optional_config_file_path)
 	load(optional_config_file_path)
 else
 	# Name of the Vagrant VM in which to execute commands. Defaults to 'dev'.
-	BVSH_VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
+	AVSH_VM_NAME = ENV.fetch('AVSH_VM_NAME', 'dev')
 
 	# Directory containing the Vagrantfile for the above VM. Defaults to current directory.
-	BVSH_VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
+	AVSH_VAGRANTFILE_DIR = ENV.fetch("AVSH_VAGRANTFILE_DIR", Dir.pwd)
 end
 #### END CONFIGURATION #####
 
 require 'open3'
 
 def debug(msg)
-	puts "#{caller[0]}: #{msg}" if ENV.include?('BVSH_DEBUG')
+	puts "#{caller[0]}: #{msg}" if ENV.include?('AVSH_DEBUG')
 end
 
 class HostToGuestDirectoryTranslator
@@ -60,7 +60,7 @@ class HostToGuestDirectoryTranslator
 			return path if File.readable? path
 		end
 		STDERR.puts("Unable to find Vagrantfile for directory #{@config.vagrantfile_dir}. " +
-			"This usually means you need to specify the BVSH_VAGRANTFILE_DIR configuration option. " +
+			"This usually means you need to specify the AVSH_VAGRANTFILE_DIR configuration option. " +
 			"See the README.md for details.")
 		exit 1
 	end
@@ -167,7 +167,7 @@ class SshCommandExecutor
 		# that just means there will be a minor delay as it re-establishes the socket the next time this
 		# is run.
 		#
-		# Another option would be to use BVSH_VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
+		# Another option would be to use AVSH_VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
 		# manages that directory and I don't think it's safe to be storing foreign files there.
 		"/tmp/vagrant_ssh_wrapper_#{@config.vm_name}_controlmaster.sock"
 	end
@@ -184,7 +184,7 @@ class SshCommandExecutor
 		if not status.success?
 			STDERR.puts(
 				"Command \"VAGRANT_CWD=#{@config.vagrantfile_dir} #{ssh_config_command.join(' ')}\" exited with status #{status.exitstatus}.\n" +
-				"Is the BVSH_VAGRANTFILE_DIR setting correct? See the README.md for details.\n\n" +
+				"Is the AVSH_VAGRANTFILE_DIR setting correct? See the README.md for details.\n\n" +
 				"Output from Vagrant:\n#{stdout}#{stderr}"
 			)
 			exit 1
@@ -230,6 +230,6 @@ class SshCommandExecutor
 	end
 end
 
-config = Struct.new(:vm_name, :vagrantfile_dir).new(BVSH_VM_NAME, BVSH_VAGRANTFILE_DIR)
+config = Struct.new(:vm_name, :vagrantfile_dir).new(AVSH_VM_NAME, AVSH_VAGRANTFILE_DIR)
 guest_dir = HostToGuestDirectoryTranslator.new(config).translate(Dir.pwd)
 SshCommandExecutor.new(config).execute(guest_dir, ARGV.join(' '))

@@ -1,6 +1,6 @@
-# bvsh
+# avsh
 
-bvsh ("Better Vagrant sSH") is a standalone script that emulates `vagrant ssh`, but is much faster
+avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant ssh`, but is much faster
 and more convienent when working on sync folders. It will automatically set up SSH multiplexing the
 first time it's run, which eliminates the overhead of establishing a SSH connection on subsequent
 invocations. Additionally, it detects when you're working in a synched folder, and automatically
@@ -16,23 +16,23 @@ switches to the corresponding directory on the guest.
 
 Put this script somewhere convienent, and optionally add an alias (I use "v"):
 ```
-git clone https://github.com/MasonM/bvsh.git
-echo "alias v=$(pwd)/bvsh/bvsh" >> ~/.bashrc # optional
+git clone https://github.com/MasonM/avsh.git
+echo "alias v=$(pwd)/avsh/avsh" >> ~/.bashrc # optional
 ```
-bvsh has two configuration setings: the name of the VM to connect to (`VM_NAME`) and the directory
+avsh has two configuration setings: the name of the VM to connect to (`VM_NAME`) and the directory
 containing the Vagrantfile for that VM (`VAGRANTFILE_DIR`). These can be configured by either
-directly editing the those constants at the top of the script, adding a `~/.bvsh_config` Ruby file
-defining those constants, or specify the corresponding environment variables (`BVSH_VM_NAME`
-and `BVSH_VAGRANTFILE_DIR`).
+directly editing the those constants at the top of the script, adding a `~/.avsh_config` Ruby file
+defining those constants, or specify the corresponding environment variables (`AVSH_VM_NAME`
+and `AVSH_VAGRANTFILE_DIR`).
 
 # Usage
 
-Run `bvsh <command>` to execute a command in the guest VM, or `bvsh` for a login shell. If
+Run `avsh <command>` to execute a command in the guest VM, or `avsh` for a login shell. If
 you're in a synced folder, it will change to the corresponding directory on the guest before running
 the command or starting the shell. Otherwise, it changes to `/vagrant`.
 
 # Why not a Vagrant plugin?
 
 Because Vagrant has too much overhead. Just running `vagrant version` takes nearly a second on my
-PC, which is enough to be annoying when running tests while developing. bvsh has no dependencies, so
+PC, which is enough to be annoying when running tests while developing. avsh has no dependencies, so
 its overhead is negligible. 
