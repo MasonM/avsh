@@ -36,8 +36,7 @@ class HostToGuestDirectoryTranslator
 			return '/vagrant'
 		end
 
-		synced_folders = DummyVagrantEnvironment.find_synced_folders(vagrantfile_path)
-		debug "Got synced folders: #{synced_folders}"
+		synced_folders = DummyVagrantEnvironment.find_synced_folders(vagrantfile_path, @config.vm_name)
 		synced_folders.each do |src, dest|
 			real_src = File.realpath(src, @config.vagrantfile_dir)
 			if real_host_directory.start_with?(real_src)
@@ -72,13 +71,13 @@ module DummyVagrantEnvironment
 	# without incurring the overhead of loading Vagrant. It uses a binding object to eval the
 	# Vagrantfile in this module, which will communicate with the dummy Vagrant module below.
 
-	def self.find_synced_folders(vagrantfile_path)
+	def self.find_synced_folders(vagrantfile_path, vm_name)
 		debug "Parsing synced folders from #{vagrantfile_path}..."
 
 		# The dummy_configure object will be used to collect the synced_folder declarations. We need to
 		# set it as a class variable on Vagrant, since we can't tell the Vagrantfile to use a specific
 		# instance of Vagrant.
-		dummy_configure = Configure.new
+		dummy_configure = Configure.new(vm_name)
 		Vagrant.class_variable_set(:@@configure, dummy_configure)
 
 		# Eval the Vagrantfile with this module as the execution context
@@ -110,12 +109,23 @@ module DummyVagrantEnvironment
 	class Configure
 		attr_reader :synced_folders
 
-		def initialize
+		def initialize(vm_name)
+			@vm_name = vm_name
 			@synced_folders = {}
 		end
 
 		def synced_folder(src, dest, *args)
 			@synced_folders[src] = dest unless @synced_folders.include?(src)
+		end
+
+		def define(vm_name, *args)
+			if vm_name == @vm_name
+				yield self
+			else
+				# The guest machine is different than the VM we care about, so give it a new Configure
+				# object that'll be thrown away at the end.
+				yield Configure.new(nil)
+			end
 		end
 
 		def method_missing(methodId, *args)
