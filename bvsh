@@ -6,17 +6,17 @@ if File.exist?(optional_config_file_path)
 	load(optional_config_file_path)
 else
 	# Name of the Vagrant VM in which to execute commands. Defaults to 'dev'.
-	VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
+	BVSH_VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
 
 	# Directory containing the Vagrantfile for the above VM. Defaults to current directory.
-	VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
+	BVSH_VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
 end
 #### END CONFIGURATION #####
 
 require 'open3'
 
 def debug(msg)
-	puts msg if ENV.include?('BVSH_DEBUG')
+	puts "#{caller[0]}: #{msg}" if ENV.include?('BVSH_DEBUG')
 end
 
 class HostToGuestDirectoryTranslator
@@ -32,7 +32,7 @@ class HostToGuestDirectoryTranslator
 		# is a descendent of (or equal to) one of the src folders.
 		real_host_directory = File.realpath(host_directory)
 		if real_host_directory == @vagrantfile_dir
-			debug "Current directory is the Vagrantfile directory (#{@vagrantfile_dir}, so use '/vagrant'"
+			debug "Current directory is the Vagrantfile directory (#{@vagrantfile_dir}), so use '/vagrant'"
 			return '/vagrant'
 		end
 
@@ -59,7 +59,10 @@ class HostToGuestDirectoryTranslator
 			path = File.join(@vagrantfile_dir, filename)
 			return path if File.readable? path
 		end
-		raise "Unable to find Vagrantfile in #{@vagrantfile_dir}"
+		STDERR.puts("Unable to find Vagrantfile for directory #{@vagrantfile_dir}. " +
+			"This usually means you need to specify the BVSH_VAGRANTFILE_DIR configuration option. " +
+			"See the README.md for details.")
+		exit 1
 	end
 end
 
@@ -153,27 +156,39 @@ class SshCommandExecutor
 		# that just means there will be a minor delay as it re-establishes the socket the next time this
 		# is run.
 		#
-		# Another option would be to use VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
+		# Another option would be to use BVSH_VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
 		# manages that directory and I don't think it's safe to be storing foreign files there.
 		"/tmp/vagrant_ssh_wrapper_#{@vm_name}_controlmaster.sock"
 	end
 
-	def ssh_config
+	def read_vagrant_ssh_config
 		# Runs "vagrant ssh-config" to get the SSH config, which is needed so we can establish a control
 		# socket using SSH directly.
 		#
 		# The VAGRANT_CWD environment variable tells Vagrant to look for the Vagrantfile in that
 		# directory. See https://www.vagrantup.com/docs/other/environmental-variables.html
-		ssh_config_command = "VAGRANT_CWD=#{@vagrantfile_dir} vagrant ssh-config '#{@vm_name}'"
-		ssh_config = `#{ssh_config_command}`
-		raise "Failed to run \"#{ssh_config_command}\"" unless $?.success?
-		debug "Got SSH config: #{ssh_config}"
-		ssh_config
+		ssh_config_command = ["vagrant", "ssh-config", @vm_name]
+		debug "Executing vagrant ssh-config command: #{ssh_config_command}"
+		stdout, stderr, status = Open3.capture3({"VAGRANT_CWD" => @vagrantfile_dir}, *ssh_config_command)
+		if not status.success?
+			STDERR.puts(
+				"Command \"VAGRANT_CWD=#{@vagrantfile_dir} #{ssh_config_command.join(' ')}\" exited with status #{status.exitstatus}.\n" +
+				"Is the BVSH_VAGRANTFILE_DIR setting correct? See the README.md for details.\n\n" +
+				"Output from Vagrant:\n#{stdout}#{stderr}"
+			)
+			exit 1
+		elsif not stderr.empty?
+			STDERR.puts("Got unexpected error message from Vagrant while running \"#{ssh_config_command.join(' ')}\": #{stderr}")
+			exit 1
+		end
+		debug "Got SSH config for #{@vm_name}: stdout"
+		stdout
 	end
 
 	def initialize_master_socket
 		debug "Establishing control socket for '#{@vm_name}' at '#{ssh_controlmaster_path}'"
 
+		ssh_config = read_vagrant_ssh_config()
 		# This is mostly based off
 		# https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing#Manually_Establishing_Multiplexed_Connections
 		ssh_cmd = ["ssh", 
@@ -195,14 +210,14 @@ class SshCommandExecutor
 		debug "Executing SSH command '#{ssh_cmd}'"
 		Open3.popen3(*ssh_cmd) do |stdin, stdout, stderr, wait_threads|
 			if stdin.closed?
-				raise "Failed to establish SSH ControlMaster socket. Stderr = '#{stderr.read}'"
+				STDERR.puts("Failed to establish SSH ControlMaster socket. Got error from SSH: '#{stderr.read}'")
+				exit 1
 			end
 			stdin.puts(ssh_config)
 		end
-		raise "Failed to establish SSH ControlMaster socket" unless $?.success?
 	end
 end
 
-guest_dir = HostToGuestDirectoryTranslator.new(VAGRANTFILE_DIR).translate(Dir.pwd)
-executor = SshCommandExecutor.new(VAGRANTFILE_DIR, VM_NAME)
+guest_dir = HostToGuestDirectoryTranslator.new(BVSH_VAGRANTFILE_DIR).translate(Dir.pwd)
+executor = SshCommandExecutor.new(BVSH_VAGRANTFILE_DIR, BVSH_VM_NAME)
 executor.execute(guest_dir, ARGV.join(' '))

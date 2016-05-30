@@ -1,3 +1,3 @@
 # Example of the optional config file for BVSH. See "Installation" section of README.md
-VM_NAME = 'dev'
-VAGRANTFILE_DIR = Dir.pwd
+BVSH_VM_NAME = 'dev'
+BVSH_VAGRANTFILE_DIR = Dir.pwd
