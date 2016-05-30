@@ -1,15 +1,16 @@
 #!/usr/bin/env ruby
 
 #### START CONFIGURATION #####
+optional_config_file_path = File.absolute_path('~/.bvsh_config')
+if File.exist?(optional_config_file_path)
+	load(optional_config_file_path)
+else
+	# Name of the Vagrant VM in which to execute commands. Defaults to 'dev'.
+	VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
 
-# Name of the Vagrant VM in which to execute commands.
-# Defaults to "dev". Change that or set the BVSH_VM_NAME environment variable.
-VM_NAME = ENV.fetch('BVSH_VM_NAME', 'dev')
-
-# Directory containing the Vagrantfile for the above VM.
-# Defaults to current directory. Change that or set the BVSH_VAGRANTFILE_DIR environment variable.
-VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
-
+	# Directory containing the Vagrantfile for the above VM. Defaults to current directory.
+	VAGRANTFILE_DIR = ENV.fetch("BVSH_VAGRANTFILE_DIR", Dir.pwd)
+end
 #### END CONFIGURATION #####
 
 require 'open3'

@@ -17,11 +17,12 @@ switches to the corresponding directory on the guest.
 Put this script somewhere convienent, and optionally add an alias (I use "v"):
 ```
 git clone https://github.com/MasonM/bvsh.git
-echo "alias v=$(pwd)/bvsh/bvsh" >> ~/.bashrc
+echo "alias v=$(pwd)/bvsh/bvsh" >> ~/.bashrc # optional
 ```
 
-Then, edit the configuration options at the top of the script, or specify the corresponding
-environment variables.
+Configuration can be done by directly editing the options at the top of the script, adding a
+`~/.bvsh_config` Ruby file defining those options, or specify the corresponding environment
+variables.
 
 # Usage
 
