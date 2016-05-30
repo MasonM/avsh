@@ -17,17 +17,15 @@ corresponding directory on the guest before executing commands or starting a log
 
 Put this script somewhere convenient, and optionally add an alias (I use "v"):
 ```
-curl -o avsh https://raw.githubusercontent.com/MasonM/avsh/master/avsh
-chmod +x avsh
+git clone https://github.com/MasonM/avsh.git
 
 # optional:
-echo "alias v=$(pwd)/avsh" >> ~/.bashrc
+echo "alias v=$(pwd)/avsh/avsh" >> ~/.bashrc
 ```
 avsh has two configuration setings: the name of the VM to connect to (`AVSH_VM_NAME`) and the
 directory containing the Vagrantfile for that VM (`AVSH_VAGRANTFILE_DIR`). These can be configured
 by either editing the script to change those constants, adding a `~/.avsh_config` file defining them
-(see `avsh_config_example.rb` for an example), or specify the corresponding environment variables
-(`AVSH_VM_NAME` and `AVSH_VAGRANTFILE_DIR`).
+(see `avsh_config_example.rb` for an example), or specifying them as environment variables.
 
 # Usage
 

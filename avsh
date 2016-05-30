@@ -15,12 +15,13 @@ end
 
 require 'open3'
 
+# Enable debug output by prepending AVSH_DEBUG=1 to the command (e.g. 'AVSH_DEBUG=1 avsh ls')
 def debug(msg)
 	puts "#{caller[0]}: #{msg}" if ENV.include?('AVSH_DEBUG')
 end
 
 class HostToGuestDirectoryTranslator
-	# Translates a directory on the host with the corresponding directory in the guest by matching
+	# Translates a directory on the host to the corresponding directory in the guest by matching
 	# against the synced_folder declarations extracted from the Vagrantfile
 
 	def initialize(config)
@@ -30,6 +31,8 @@ class HostToGuestDirectoryTranslator
 	def translate(host_directory)
 		# Iterates over the synced_folders dictionary to see if the given directory
 		# is a descendent of (or equal to) one of the src folders.
+		vagrantfile_path = find_vagrantfile
+
 		real_host_directory = File.realpath(host_directory)
 		if real_host_directory == @config.vagrantfile_dir
 			debug "Current directory is the Vagrantfile directory (#{@config.vagrantfile_dir}), so use '/vagrant'"
@@ -53,15 +56,17 @@ class HostToGuestDirectoryTranslator
 
 	private
 
-	def vagrantfile_path
+	def find_vagrantfile
 		# Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we have to check for both.
 		for filename in ['Vagrantfile', 'vagrantfile']
 			path = File.join(@config.vagrantfile_dir, filename)
 			return path if File.readable? path
 		end
-		STDERR.puts("Unable to find Vagrantfile for directory #{@config.vagrantfile_dir}. " +
+		STDERR.puts(
+			"avsh couldn't find the Vagrantfile for the directory #{@config.vagrantfile_dir}\n" +
 			"This usually means you need to specify the AVSH_VAGRANTFILE_DIR configuration option. " +
-			"See the README.md for details.")
+			"See README.md for details."
+		)
 		exit 1
 	end
 end
@@ -81,7 +86,12 @@ module DummyVagrantEnvironment
 		Vagrant.class_variable_set(:@@configure, dummy_configure)
 
 		# Eval the Vagrantfile with this module as the execution context
-		binding.eval(File.read(vagrantfile_path), vagrantfile_path)
+		begin
+			binding.eval(File.read(vagrantfile_path), vagrantfile_path)
+		rescue Exception => e
+			STDERR.puts("avsh got an unexpected error while reading the Vagrantfile at #{vagrantfile_path}:\n#{e.inspect}")
+			exit 1
+		end
 
 		debug "Got synced folders: #{dummy_configure.synced_folders}"
 		dummy_configure.synced_folders
@@ -129,6 +139,8 @@ module DummyVagrantEnvironment
 		end
 
 		def method_missing(methodId, *args)
+			# Ensure this object continues to be used when defining a multi-machine setup, and ignore any
+			# other methods, since they don't matter.
 			yield self if block_given?
 			self
 		end
@@ -157,6 +169,10 @@ class SshCommandExecutor
 
 		# Script execution ends here, since SSH will replace the current process.
 		exec(*ssh_command)
+
+		# Shouldn't be possible to get to this point, but check anyway
+		STDERR.puts("avsh failed to pass control to SSH. Please file a bug at https://github.com/MasonM/avsh/issues")
+		exit 1
 	end
 
 	private
@@ -169,7 +185,7 @@ class SshCommandExecutor
 		#
 		# Another option would be to use AVSH_VAGRANTFILE_DIR/.vagrant/, which is what vassh does, but Vagrant
 		# manages that directory and I don't think it's safe to be storing foreign files there.
-		"/tmp/vagrant_ssh_wrapper_#{@config.vm_name}_controlmaster.sock"
+		"/tmp/avsh_#{@config.vm_name}_controlmaster.sock"
 	end
 
 	def read_vagrant_ssh_config
@@ -180,16 +196,20 @@ class SshCommandExecutor
 		# directory. See https://www.vagrantup.com/docs/other/environmental-variables.html
 		ssh_config_command = ["vagrant", "ssh-config", @config.vm_name]
 		debug "Executing vagrant ssh-config command: #{ssh_config_command}"
-		stdout, stderr, status = Open3.capture3({VAGRANT_CWD: @config.vagrantfile_dir}, *ssh_config_command)
-		if not status.success?
-			STDERR.puts(
-				"Command \"VAGRANT_CWD=#{@config.vagrantfile_dir} #{ssh_config_command.join(' ')}\" exited with status #{status.exitstatus}.\n" +
-				"Is the AVSH_VAGRANTFILE_DIR setting correct? See the README.md for details.\n\n" +
-				"Output from Vagrant:\n#{stdout}#{stderr}"
-			)
-			exit 1
-		elsif not stderr.empty?
-			STDERR.puts("Got unexpected error message from Vagrant while running \"#{ssh_config_command.join(' ')}\": #{stderr}")
+		stdout, stderr, status = Open3.capture3({"VAGRANT_CWD" => @config.vagrantfile_dir}, *ssh_config_command)
+		if not status.success? or not stderr.empty?
+			human_readable_command = "VAGRANT_CWD=#{@config.vagrantfile_dir} #{ssh_config_command.join(' ')}"
+			if not status.success?
+				STDERR.puts(
+					"avsh failed to determine the SSH configuration for the VM '#{@config.vm_name}'.\n"+
+					"Is the AVSH_VAGRANTFILE_DIR setting correct? See README.md for details.\n\n" +
+					"Details:\n" +
+					"Command \"#{human_readable_command}\" exited with status #{status.exitstatus}\n" +
+					"Vagrant output:\n#{stdout}#{stderr}"
+				)
+			else
+				STDERR.puts("avsh got an unexpected error message from Vagrant while running \"#{human_readable_command}\": #{stderr}")
+			end
 			exit 1
 		end
 		debug "Got SSH config for #{@config.vm_name}: stdout"
@@ -223,7 +243,7 @@ class SshCommandExecutor
 		debug "Executing SSH command '#{ssh_cmd}'"
 		Open3.popen3(*ssh_cmd) do |stdin, stdout, stderr, wait_threads|
 			if stdin.closed?
-				STDERR.puts("Failed to establish SSH ControlMaster socket. Got error from SSH: '#{stderr.read}'")
+				STDERR.puts("avsh failed to establish a SSH ControlMaster socket. Error from SSH: '#{stderr.read}'")
 				exit 1
 			end
 			stdin.puts(ssh_config)
