@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 #### START CONFIGURATION #####
-optional_config_file_path = File.absolute_path('~/.avsh_config')
+optional_config_file_path = File.absolute_path("#{Dir.home}/.avsh_config.rb")
 if File.exist?(optional_config_file_path)
 	load(optional_config_file_path)
 else
@@ -202,7 +202,7 @@ class SshCommandExecutor
 			if not status.success?
 				STDERR.puts(
 					"avsh failed to determine the SSH configuration for the VM '#{@config.vm_name}'.\n"+
-					"Is the AVSH_VAGRANTFILE_DIR setting correct? See README.md for details.\n\n" +
+					"Are the AVSH_VAGRANTFILE_DIR and AVSH_VM_NAME settings correct? See README.md for details.\n\n" +
 					"Details:\n" +
 					"Command \"#{human_readable_command}\" exited with status #{status.exitstatus}\n" +
 					"Vagrant output:\n#{stdout}#{stderr}"

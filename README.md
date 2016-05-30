@@ -24,7 +24,7 @@ echo "alias v=$(pwd)/avsh/avsh" >> ~/.bashrc
 ```
 avsh has two configuration setings: the name of the VM to connect to (`AVSH_VM_NAME`) and the
 directory containing the Vagrantfile for that VM (`AVSH_VAGRANTFILE_DIR`). These can be configured
-by either editing the script to change those constants, adding a `~/.avsh_config` file defining them
+by either editing the script to change those constants, adding a `~/.avsh_config.rb` file defining them
 (see `avsh_config_example.rb` for an example), or specifying them as environment variables.
 
 # Usage
