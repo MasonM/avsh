@@ -1,4 +1,4 @@
-# avsh
+# Overview
 
 avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant ssh`, but is much
 faster and more convenient when working on synced projects. It automatically sets up SSH
