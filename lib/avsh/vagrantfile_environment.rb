@@ -11,8 +11,13 @@ module Avsh
 			dummy_configure = Configure.new(vm_name)
 			Vagrant.class_variable_set(:@@configure, dummy_configure)
 
-			# Eval the Vagrantfile with this module as the execution context
-			binding.eval(File.read(vagrantfile_path), vagrantfile_path)
+			begin
+				# Eval the Vagrantfile with this module as the execution context
+				binding.eval(File.read(vagrantfile_path), vagrantfile_path)
+			rescue Exception => e
+				raise VagrantfileEvalError.new(vagrantfile_path, e)
+			end
+
 
 			dummy_configure
 		end

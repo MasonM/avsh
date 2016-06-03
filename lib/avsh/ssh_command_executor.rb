@@ -26,9 +26,8 @@ module Avsh
 			# Script execution ends here, since SSH will replace the current process.
 			exec(*ssh_command)
 
-			# Shouldn't be possible to get to this point, but check anyway
-			STDERR.puts("avsh failed to pass control to SSH. Please file a bug at https://github.com/MasonM/avsh/issues")
-			exit 1
+			# Shouldn't be possible to get to this point
+			raise ExecSshError.new
 		end
 
 		private
@@ -55,18 +54,7 @@ module Avsh
 			stdout, stderr, status = Open3.capture3({"VAGRANT_CWD" => @vagrantfile_dir}, *ssh_config_command)
 			if not status.success? or not stderr.empty?
 				human_readable_command = "VAGRANT_CWD=#{@vagrantfile_dir} #{ssh_config_command.join(' ')}"
-				if not status.success?
-					@logger.error(
-						"avsh failed to determine the SSH configuration for the VM '#{@vm_name}'.\n"+
-						"Are the AVSH_VAGRANTFILE_DIR and AVSH_VM_NAME settings correct? See README.md for details.\n\n" +
-						"Details:\n" +
-						"Command \"#{human_readable_command}\" exited with status #{status.exitstatus}\n" +
-						"Vagrant output:\n#{stdout}#{stderr}"
-					)
-				else
-					@logger.error("avsh got an unexpected error message from Vagrant while running \"#{human_readable_command}\": #{stderr}")
-				end
-				exit 1
+				raise VagrantSshConfigError.new(@vm_name, human_readable_command, status, stderr, stdout)
 			end
 			@logger.debug "Got SSH config for #{@vm_name}: stdout"
 			stdout
@@ -99,8 +87,7 @@ module Avsh
 			@logger.debug "Executing SSH command '#{ssh_cmd}'"
 			Open3.popen3(*ssh_cmd) do |stdin, stdout, stderr, wait_threads|
 				if stdin.closed?
-					@logger.error("avsh failed to establish a SSH ControlMaster socket. Error from SSH: '#{stderr.read}'")
-					exit 1
+					raise SshMasterSocketError.new(stderr.read)
 				end
 				stdin.puts(ssh_config)
 			end

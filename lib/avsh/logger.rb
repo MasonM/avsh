@@ -7,9 +7,5 @@ module Avsh
 		def debug(msg)
 			puts "#{caller[0]}: #{msg}" if @debug_mode
 		end
-
-		def error(msg)
-			STDERR.puts(msg)
-		end
 	end
 end
