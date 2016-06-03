@@ -3,7 +3,8 @@ module Avsh
 		# Translates a directory on the host to the corresponding directory in the guest by matching
 		# against the synced_folder declarations extracted from the Vagrantfile
 
-		def initialize(vagrantfile_dir, synced_folders)
+		def initialize(logger, vagrantfile_dir, synced_folders)
+			@logger = logger
 			@vagrantfile_dir = vagrantfile_dir
 			@synced_folders = synced_folders
 		end
@@ -14,7 +15,7 @@ module Avsh
 
 			real_host_directory = File.realpath(host_directory)
 			if real_host_directory == @vagrantfile_dir
-				debug "Current directory is the Vagrantfile directory (#{@vagrantfile_dir}), so use '/vagrant'"
+				@logger.debug "Current directory is the Vagrantfile directory (#{@vagrantfile_dir}), so use '/vagrant'"
 				return '/vagrant'
 			end
 
@@ -23,12 +24,12 @@ module Avsh
 				if real_host_directory.start_with?(real_src)
 					relative_directory = real_host_directory[real_src.length .. -1]
 					full_directory = File.join(dest, relative_directory)
-					debug "Guest path for '#{real_host_directory}' is '#{full_directory}'"
+					@logger.debug "Guest path for '#{real_host_directory}' is '#{full_directory}'"
 					return full_directory
 				end
 			end
 
-			debug "Couldn't find guest directory for '#{real_host_directory}', falling back to /vagrant"
+			@logger.debug "Couldn't find guest directory for '#{real_host_directory}', falling back to /vagrant"
 			return '/vagrant'
 		end
 	end

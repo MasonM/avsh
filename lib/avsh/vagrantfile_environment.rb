@@ -5,8 +5,6 @@ module Avsh
 		# Vagrantfile in this module, which will communicate with the dummy Vagrant module below.
 
 		def self.evaluate(vagrantfile_path, vm_name)
-			debug "Parsing Vagrantfile '#{vagrantfile_path}' ..."
-
 			# The dummy_configure object will be used to collect the config details. We need to set it
 			# as a class variable on Vagrant, since we can't tell the Vagrantfile to use a specific
 			# instance of Vagrant.
@@ -48,7 +46,6 @@ module Avsh
 
 			def synced_folder(src, dest, *args)
 				@synced_folders[src] = dest unless @synced_folders.include?(src)
-				puts "SYNC #{synced_folders}"
 			end
 
 			def define(vm_name, *args)
