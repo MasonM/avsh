@@ -5,12 +5,13 @@ RSpec::Core::RakeTask.new(:spec)
 
 task :default => :spec
 
-task :create_script do
-	out = File.read('lib/script_header.rb')
+task :script do
+	out = File.read('script_parts/shebang.sh')
+	out += File.read('script_parts/config.rb')
 	Dir['lib/avsh/*.rb'].each do |file|
 		out += File.read(file)
 	end
-	out += File.read('lib/script_footer.rb')
+	out += File.read('script_parts/run.rb')
 
 	File.open('avsh', 'w') do |file|
 		file.write(out)

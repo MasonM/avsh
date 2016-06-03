@@ -1,7 +1,7 @@
 module Avsh
 	class CLI
-		def initialize(debug_mode, vagrantfile_dir, vm_name)
-			@logger = Logger.new(debug_mode)
+		def initialize(logger, vagrantfile_dir, vm_name)
+			@logger = logger
 			@vagrantfile_dir = vagrantfile_dir
 			@vm_name = vm_name
 		end

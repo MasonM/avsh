@@ -28,6 +28,8 @@ module Avsh
 				path = File.join(vagrantfile_dir, filename)
 				return path if File.readable? path
 			end
+
+			# Nothing found
 			raise VagrantfileNotFoundError.new(vagrantfile_dir)
 		end
 	end

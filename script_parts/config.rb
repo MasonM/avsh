@@ -1,10 +1,3 @@
-#!/usr/bin/env ruby
-
-# avsh v0.1
-# Homepage: https://github.com/MasonM/avsh
-# Bugs: https://github.com/MasonM/avsh/issues
-# Enable debug output by prepending AVSH_DEBUG=1 to the command (e.g. 'AVSH_DEBUG=1 avsh ls')
-
 #### START CONFIGURATION #####
 optional_config_file_path = File.absolute_path("#{Dir.home}/.avsh_config.rb")
 if File.exist?(optional_config_file_path)
