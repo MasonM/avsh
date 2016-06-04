@@ -5,27 +5,38 @@ module Avsh
   # Vagrantfile in VagrantfileEnvironment, which will communicate with a dummy
   # Vagrant module.
   class VagrantfileReader
-    def initialize(logger, vagrantfile_dir)
+    def initialize(logger, vagrantfile_dir, vagrantfile_name = nil)
       @logger = logger
-      @vagrantfile_path = find_vagrantfile(vagrantfile_dir)
+      @vagrantfile_path = find_vagrantfile(vagrantfile_dir, vagrantfile_name)
     end
 
-    def find_synced_folders(vm_name)
-      @logger.debug "Parsing Vagrantfile '#{@vagrantfile_path}' ..."
+    def primary_machine
+      config.find_primary
+    end
 
-      # Raises VagrantfileEvalError on failure
-      config = VagrantfileEnvironment.evaluate(@vagrantfile_path, vm_name)
-
-      @logger.debug "Got synced folders: #{config.synced_folders}"
-      config.synced_folders
+    def find_synced_folders_by_machine
+      config.collect_folders_by_machine
     end
 
     private
 
-    # Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we have
-    # to check for both.
-    def find_vagrantfile(vagrantfile_dir)
-      %w('Vagrantfile', 'vagrantfile').each do |filename|
+    def config
+      # Raises VagrantfileEvalError on failure
+      @config ||= VagrantfileEnvironment.evaluate(@logger, @vagrantfile_path)
+    end
+
+    # rubocop:disable Metrics/MethodLength
+    def find_vagrantfile(vagrantfile_dir, vagrantfile_name = nil)
+      filenames_to_check =
+        if vagrantfile_name
+          [vagrantfile_name]
+        else
+          # Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we
+          # have to check for both.
+          %w('Vagrantfile' 'vagrantfile')
+        end
+
+      filenames_to_check.each do |filename|
         path = File.join(vagrantfile_dir, filename)
         return path if File.readable? path
       end

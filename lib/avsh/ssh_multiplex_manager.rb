@@ -3,15 +3,15 @@ require 'open3'
 module Avsh
   # Manages SSH multiplexing
   class SshMultiplexManager
-    def initialize(logger, vm_name, vagrantfile_dir)
+    def initialize(logger, machine_name, vagrantfile_dir)
       @logger = logger
-      @vm_name = vm_name
+      @machine_name = machine_name
       @vagrantfile_dir = vagrantfile_dir
     end
 
     def initialize_if_needed
       return unless File.socket?(controlmaster_path)
-      @logger.debug("Establishing control socket for '#{@vm_name}' " \
+      @logger.debug("Establishing control socket for '#{@machine_name}' " \
         "at '#{controlmaster_path}'")
 
       ssh_config = read_vagrant_ssh_config
@@ -28,24 +28,20 @@ module Avsh
     # socket file will be lost on reboot, but that just means there will be a
     # minor delay as it re-establishes the socket the next time avsh is run.
     #
-    # Another option would be to use AVSH_VAGRANTFILE_DIR/.vagrant/, which is
+    # Another option would be to use VAGRANT_CWD/.vagrant/, which is
     # what vassh does, but Vagrant manages that directory and I don't think it's
     # safe to be storing foreign files there.
     def controlmaster_path
-      "/tmp/avsh_#{@vm_name}_controlmaster.sock"
+      "/tmp/avsh_#{@machine_name}_controlmaster.sock"
     end
 
     private
 
     # Runs "vagrant ssh-config" to get the SSH config, which is needed so we
     # can establish a control socket using SSH directly.
-    #
-    # The VAGRANT_CWD environment variable tells Vagrant to look for the
-    # Vagrantfile in that directory. See
-    # https://www.vagrantup.com/docs/other/environmental-variables.html
     # rubocop:disable Metrics/MethodLength
     def read_vagrant_ssh_config
-      ssh_config_command = ['vagrant', 'ssh-config', @vm_name]
+      ssh_config_command = ['vagrant', 'ssh-config', @machine_name]
       @logger.debug('Executing vagrant ssh-config command: ' +
         ssh_config_command)
       stdout, stderr, status = Open3.capture3(
@@ -55,10 +51,10 @@ module Avsh
       if !status.success? || !stderr.empty?
         human_readable_command =
           "VAGRANT_CWD=#{@vagrantfile_dir} " + ssh_config_command.join(' ')
-        raise VagrantSshConfigError.new(@vm_name, human_readable_command,
+        raise VagrantSshConfigError.new(@machine_name, human_readable_command,
                                         status, stderr, stdout)
       end
-      @logger.debug "Got SSH config for #{@vm_name}: #{stdout}"
+      @logger.debug "Got SSH config for #{@machine_name}: #{stdout}"
       stdout
     end
 
@@ -82,7 +78,7 @@ module Avsh
         # Path to control socket
         "-o ControlPath #{controlmaster_path}",
         # Hostname set in ssh_config
-        @vm_name
+        @machine_name
       ]
     end
   end

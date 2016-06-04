@@ -1,11 +1,11 @@
 require 'open3'
 
 module Avsh
-  # Executes a command on a VM using multiplex SSH
+  # Executes a command on a machine using multiplex SSH
   class SshCommandExecutor
-    def initialize(logger, vm_name, ssh_multiplex_manager)
+    def initialize(logger, machine_name, ssh_multiplex_manager)
       @logger = logger
-      @vm_name = vm_name
+      @machine_name = machine_name
       @ssh_multiplex_manager = ssh_multiplex_manager
     end
 
@@ -22,7 +22,7 @@ module Avsh
         command = 'exec $SHELL -l'
         ssh_command.push('-t') # force TTY allocation
       end
-      ssh_command.push(@vm_name, "cd #{guest_directory}; #{command}")
+      ssh_command.push(@machine_name, "cd #{guest_directory}; #{command}")
 
       @logger.debug "Executing '#{ssh_command}'"
 

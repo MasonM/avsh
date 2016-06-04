@@ -16,7 +16,7 @@ module Avsh
     def initialize(vagrantfile_dir)
       super('avsh couldn\'t find the Vagrantfile for the directory ' \
         "#{vagrantfile_dir}\n" \
-        'This usually means you need to specify the AVSH_VAGRANTFILE_DIR ' \
+        'This usually means you need to specify the VAGRANT_CWD ' \
         'configuration option. See README.md for details.'
       )
     end
@@ -33,12 +33,12 @@ module Avsh
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
   # rubocop:disable Metrics/MethodLength
   class VagrantSshConfigError < Error
-    def initialize(vm_name, command, status, stdout, stderr)
+    def initialize(machine_name, command, status, stdout, stderr)
       if !status.success?
         super(
-          'avsh failed to determine the SSH configuration for the VM ' \
-          "'#{vm_name}'.\n" \
-          'Are the AVSH_VAGRANTFILE_DIR and AVSH_VM_NAME settings correct? ' \
+          'avsh failed to determine the SSH configuration for the machine ' \
+          "'#{machine_name}'.\n" \
+          'Is the VAGRANT_CWD setting correct? ' \
           "See README.md for details.\n\n" \
           "Details:\n" \
           "Command \"#{command}\" exited with status #{status.exitstatus}\n" \

@@ -11,7 +11,6 @@ task default: :spec
 task :script do
   script_files = [
     'script_parts/shebang.sh',
-    'script_parts/config.rb',
     'lib/avsh/*.rb',
     'script_parts/run.rb'
   ]
