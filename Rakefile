@@ -9,15 +9,16 @@ RSpec::Core::RakeTask.new(:spec)
 task default: :spec
 
 task :script do
-  out = File.read('script_parts/shebang.sh')
-  out += File.read('script_parts/config.rb')
-  Dir['lib/avsh/*.rb'].each do |file|
-    out += File.read(file)
-  end
-  out += File.read('script_parts/run.rb')
+  script_files = [
+    'script_parts/shebang.sh',
+    'script_parts/config.rb',
+    'lib/avsh/*.rb',
+    'script_parts/run.rb'
+  ]
+  script_src = Dir[*script_files].map { |file| File.read(file) }.join("\n")
 
   File.open('avsh', 'w') do |file|
-    file.write(out)
+    file.write(script_src)
     file.chmod(0755)
   end
 end
