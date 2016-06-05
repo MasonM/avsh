@@ -34,7 +34,6 @@ module Avsh
       nil
     end
 
-    # rubocop:disable Metrics/MethodLength
     def match_by_synced_folder(host_directory, desired_machine)
       @logger.debug('Attempting to match against synced folders: ' +
                     @synced_folders_by_machine.to_s)

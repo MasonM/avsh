@@ -60,7 +60,6 @@ module Avsh
 
     # Runs "vagrant ssh-config" to get the SSH config, which is needed so we
     # can establish a control socket using SSH directly.
-    # rubocop:disable Metrics/MethodLength
     def read_vagrant_ssh_config
       ssh_config_command = ['vagrant', 'ssh-config', @machine_name]
       @logger.debug('Executing vagrant ssh-config command: ' +

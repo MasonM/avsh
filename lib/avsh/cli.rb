@@ -15,20 +15,21 @@ module Avsh
       # May exit at this point if "--help" or "--version" supplied
       options, command = ArgumentParser.parse(argv)
       logger = Logger.new(options[:debug])
-      execute(command.join(' '), logger, options[:reconnect], options[:machine])
+      machine_name, guest_dir = find_targets(logger, options[:machine])
+      execute(logger, command.join(' '), machine_name, guest_dir,
+              options[:reconnect])
     end
 
     private
 
-    # rubocop:disable Metrics/MethodLength
-    def execute(command, logger, reconnect = false, desired_machine = nil)
+    def find_targets(logger, desired_machine = nil)
       reader = VagrantfileReader.new(logger, @vagrant_cwd, @vagrantfile_name)
       matcher = MachineGuestDirMatcher.new(logger, @vagrant_cwd,
                                            reader.synced_folders_by_machine)
-      machine_name, guest_dir = matcher.match(reader.default_machine,
-                                              @host_directory,
-                                              desired_machine)
+      matcher.match(reader.default_machine, @host_directory, desired_machine)
+    end
 
+    def execute(logger, command, machine_name, guest_dir, reconnect = false)
       multiplex_manager = SshMultiplexManager.new(logger, machine_name,
                                                   @vagrant_cwd)
       multiplex_manager.initialize_socket_if_needed(reconnect)

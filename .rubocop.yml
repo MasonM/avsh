@@ -6,3 +6,6 @@ AllCops:
   Exclude:
     - 'script_parts/**'
     - 'avsh_config_example.rb'
+
+Metrics/MethodLength:
+  Max: 20

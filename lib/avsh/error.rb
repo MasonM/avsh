@@ -43,7 +43,6 @@ module Avsh
   end
 
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
-  # rubocop:disable Metrics/MethodLength
   class VagrantSshConfigError < Error
     def initialize(machine_name, command, status, stdout, stderr)
       if !status.success?

@@ -25,7 +25,6 @@ module Avsh
       @config ||= VagrantfileEnvironment.evaluate(@logger, @vagrantfile_path)
     end
 
-    # rubocop:disable Metrics/MethodLength
     def find_vagrantfile(vagrantfile_dir, vagrantfile_name = nil)
       filenames_to_check =
         if vagrantfile_name
