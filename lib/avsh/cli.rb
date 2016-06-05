@@ -11,22 +11,27 @@ module Avsh
       @vagrantfile_name = environment.fetch('VAGRANT_VAGRANTFILE', nil)
     end
 
-    # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    def execute(argv)
+    def parse_args_and_execute(argv)
+      # May exit at this point if "--help" or "--version" supplied
       options, command = ArgumentParser.parse(argv)
       logger = Logger.new(options[:debug])
+      execute(command.join(' '), logger, options[:machine])
+    end
 
+    private
+
+    def execute(command, logger, desired_machine = nil)
       reader = VagrantfileReader.new(logger, @vagrant_cwd, @vagrantfile_name)
       matcher = MachineGuestDirMatcher.new(logger, @vagrant_cwd,
                                            reader.synced_folders_by_machine)
       machine_name, guest_dir = matcher.match(reader.default_machine,
                                               @host_directory,
-                                              options[:machine])
+                                              desired_machine)
 
       multiplex_manager = SshMultiplexManager.new(logger, machine_name,
                                                   @vagrant_cwd)
       executor = SshCommandExecutor.new(logger, machine_name, multiplex_manager)
-      executor.execute(guest_dir, command.join(' '))
+      executor.execute(guest_dir, command)
     end
   end
 end
