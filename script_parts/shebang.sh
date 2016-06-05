@@ -3,7 +3,6 @@
 # avsh v0.1 - Augmented Vagrant sSH
 # Homepage: https://github.com/MasonM/avsh
 # Bugs: https://github.com/MasonM/avsh/issues
-# Enable debug output by prepending AVSH_DEBUG=1 (e.g. 'AVSH_DEBUG=1 avsh ls')
 
 # https://github.com/mitchellh/vagrant-installers/tree/master/package/support
 for ruby_path in "/opt/vagrant/embedded/bin/ruby" "/Applications/Vagrant/embedded/bin/ruby"; do

@@ -10,11 +10,11 @@ module Avsh
       @vagrantfile_path = find_vagrantfile(vagrantfile_dir, vagrantfile_name)
     end
 
-    def primary_machine
-      config.find_primary
+    def default_machine
+      config.find_primary || config.first_machine
     end
 
-    def find_synced_folders_by_machine
+    def synced_folders_by_machine
       config.collect_folders_by_machine
     end
 
@@ -33,7 +33,7 @@ module Avsh
         else
           # Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we
           # have to check for both.
-          %w('Vagrantfile' 'vagrantfile')
+          %w(Vagrantfile vagrantfile)
         end
 
       filenames_to_check.each do |filename|

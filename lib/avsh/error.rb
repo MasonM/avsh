@@ -1,4 +1,5 @@
 module Avsh
+  # Base error class for all avsh exceptions
   class Error < StandardError
   end
 

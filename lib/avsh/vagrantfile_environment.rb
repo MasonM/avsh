@@ -15,12 +15,11 @@ module Avsh
       begin
         # Eval the Vagrantfile with this module as the execution context
         binding.eval(File.read(vagrantfile_path), vagrantfile_path)
-      # rubocop:disable Lint/RescueException:
+      # rubocop:disable Lint/RescueException
       rescue Exception => e
         # Re-raise with a more specific exception
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
-      logger.debug "Got config: #{dummy_configure}"
 
       dummy_configure
     end
@@ -40,7 +39,7 @@ module Avsh
 
       def self.configure(*)
         # Give the provided block the dummy_configure object set above in
-        # DummyVagrantEnvironment.find_synced_folders
+        # DummyVagrantEnvironment.evaluate
         yield @@configure
       end
 
@@ -49,9 +48,7 @@ module Avsh
 
     # Dummy Configure object to collect the config details.
     class Configure
-      attr_reader :is_primary
-
-      def initialize(machine_name = :global, is_primary = false)
+      def initialize(machine_name = nil, is_primary = false)
         @machine_name = machine_name
         @synced_folders = {}
         @children = []
@@ -64,21 +61,9 @@ module Avsh
 
       def define(machine_name, options = nil)
         is_primary = options && options.fetch(:primary, false)
-        config = Configure.new(machine_name, is_primary)
-        @children.append(config)
+        config = Configure.new(machine_name.to_s, is_primary)
+        @children << config
         yield config
-      end
-
-      def find_primary
-        @children.find(&:is_primary)
-      end
-
-      def collect_folders_by_machine
-        folders_by_machine = { @machine_name => @synced_folders }
-        @children.each do |child|
-          folders_by_machine.merge!(child.collect_folders_by_machine)
-        end
-        folders_by_machine
       end
 
       # Ensure this object continues to be used when defining a multi-machine
@@ -86,6 +71,28 @@ module Avsh
       def method_missing(*)
         yield self if block_given?
         self
+      end
+
+      protected
+
+      attr_reader :is_primary, :machine_name, :synced_folders
+
+      public
+
+      def find_primary
+        primary = @children.find(&:is_primary)
+        primary ? primary.machine_name : nil
+      end
+
+      def first_machine
+        first = @children.first
+        first ? first.machine_name : nil
+      end
+
+      def collect_folders_by_machine
+        @children.map do |child|
+          { child.machine_name => child.synced_folders.merge(@synced_folders) }
+        end.reduce({}, :merge)
       end
     end
   end
