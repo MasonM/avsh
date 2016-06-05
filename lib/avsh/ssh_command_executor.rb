@@ -3,20 +3,14 @@ require 'open3'
 module Avsh
   # Executes a command on a machine using multiplex SSH
   class SshCommandExecutor
-    def initialize(logger, machine_name, ssh_multiplex_manager)
+    def initialize(logger, machine_name, controlmaster_path)
       @logger = logger
       @machine_name = machine_name
-      @ssh_multiplex_manager = ssh_multiplex_manager
+      @controlmaster_path = controlmaster_path
     end
 
-    # rubocop:disable Metrics/MethodLength
     def execute(guest_directory, command)
-      @ssh_multiplex_manager.initialize_if_needed
-
-      ssh_command = [
-        'ssh',
-        '-o ControlPath ' + @ssh_multiplex_manager.controlmaster_path
-      ]
+      ssh_command = ['ssh', '-o ControlPath ' + @controlmaster_path]
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'

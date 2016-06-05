@@ -31,12 +31,19 @@ $ avsh 'grep synced_folder /vagrant/Vagrantfile'
   config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
 ```
 
-# Requirements
+# Caveats and Requirements
 
-* Linux or OS X. Probably will work on other Unices, but it's only been tested
-  on Ubuntu 15.10 and OS X 10.11.
-* OpenSSH 5.6+
-* Vagrant 1.0+
+avsh has to make several assumptions in order to achieve its performance goals,
+which means it may not be appropriate for your setup. In particular:
+
+* Only Linux and OS X are supported. Probably will work on other Unices, but
+  it's only been tested on Ubuntu 15.10 and OS X 10.11.
+* Complex Vagrantfiles that have side-effects (e.g. IO operations) may not be
+  parsed correctly.
+* SSH connection details are cached, and must be manually cleared with
+  `avsh --reconnect` if changed.
+* If Vagrant is not installed using the [standard installer](https://www.vagrantup.com/downloads.html),
+  avsh may not be able to find your Vagrant environment.
 
 # Installation
 
@@ -65,6 +72,6 @@ defined machine.
 
 # Why not make this a Vagrant plugin?
 
-Because Vagrant has too much overhead. Just running `vagrant version` takes
-nearly a second on my PC, which is enough to be annoying when running tests
-while developing. avsh has no Ruby dependencies, so its overhead is negligible.
+While it may be possible to do this with a plugin without sacrificing
+performance, I wasn't able to get it to work. The overhead of just getting to
+the point of executing a command in a plugin is nearly 1 second on my computer.

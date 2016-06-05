@@ -9,16 +9,12 @@ module Avsh
       @vagrantfile_dir = vagrantfile_dir
     end
 
-    def initialize_if_needed
-      return unless File.socket?(controlmaster_path)
-      @logger.debug("Establishing control socket for '#{@machine_name}' " \
-        "at '#{controlmaster_path}'")
-
-      ssh_config = read_vagrant_ssh_config
-      @logger.debug "Executing SSH command '#{ssh_cmd}'"
-      Open3.popen3(*ssh_master_socket_cmd) do |stdin, _stdout, stderr, _|
-        raise SshMasterSocketError, stderr.read if stdin.closed?
-        stdin.puts(ssh_config)
+    def initialize_socket_if_needed(reconnect = false)
+      if reconnect
+        close_ssh_socket
+        initialize_socket
+      elsif !File.socket?(controlmaster_path)
+        initialize_socket
       end
     end
 
@@ -36,6 +32,31 @@ module Avsh
     end
 
     private
+
+    def initialize_socket
+      @logger.debug("Establishing control socket for '#{@machine_name}' " \
+        "at '#{controlmaster_path}'")
+
+      ssh_config = read_vagrant_ssh_config
+
+      @logger.debug "Executing SSH command '#{ssh_master_socket_cmd}'"
+
+      Open3.popen3(*ssh_master_socket_cmd) do |stdin, _stdout, stderr, _|
+        raise SshMasterSocketError, stderr.read if stdin.closed?
+        stdin.puts(ssh_config)
+      end
+    end
+
+    def close_ssh_socket
+      ssh_cmd = ['ssh', '-O stop', "-o ControlPath #{controlmaster_path}",
+                 @machine_name]
+      @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
+      stdout, stderr, status = Open3.capture3(*ssh_cmd)
+      if !status.success? || !stderr.empty?
+        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), sttatus, stderr,
+                                         stdout)
+      end
+    end
 
     # Runs "vagrant ssh-config" to get the SSH config, which is needed so we
     # can establish a control socket using SSH directly.

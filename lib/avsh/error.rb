@@ -31,6 +31,17 @@ module Avsh
     end
   end
 
+  # Indicates failure to close a multiplexed connection
+  class SshMultiplexCloseError < Error
+    def initialize(command, status, stdout, stderr)
+      super(
+        'avsh got an error while trying to close the SSH connection with the ' \
+        "the command #{command}.\nStatus: #{status}\n" \
+        "Output: #{stdout}#{stderr}"
+      )
+    end
+  end
+
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
   # rubocop:disable Metrics/MethodLength
   class VagrantSshConfigError < Error

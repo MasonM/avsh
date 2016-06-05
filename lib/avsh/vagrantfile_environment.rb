@@ -48,11 +48,11 @@ module Avsh
 
     # Dummy Configure object to collect the config details.
     class Configure
-      def initialize(machine_name = nil, is_primary = false)
-        @machine_name = machine_name
+      attr_reader :synced_folders, :primary_machine, :machine_name
+      def initialize
         @synced_folders = {}
-        @children = []
-        @is_primary = is_primary
+        @machines = []
+        @primary_machine = nil
       end
 
       def synced_folder(src, dest, *_args)
@@ -61,8 +61,9 @@ module Avsh
 
       def define(machine_name, options = nil)
         is_primary = options && options.fetch(:primary, false)
-        config = Configure.new(machine_name.to_s, is_primary)
-        @children << config
+        machine_config = Configure.new
+        @primary_machine = machine_name.to_s if is_primary
+        @machines[machine_name.to_s] = machine_config
         yield config
       end
 
@@ -73,26 +74,17 @@ module Avsh
         self
       end
 
-      protected
-
-      attr_reader :is_primary, :machine_name, :synced_folders
-
-      public
-
-      def find_primary
-        primary = @children.find(&:is_primary)
-        primary ? primary.machine_name : nil
-      end
-
       def first_machine
-        first = @children.first
-        first ? first.machine_name : nil
+        first = @machines.first
+        first ? first.machine_name : :global
       end
 
       def collect_folders_by_machine
-        @children.map do |child|
-          { child.machine_name => child.synced_folders.merge(@synced_folders) }
-        end.reduce({}, :merge)
+        folders = { global: @synced_folders }
+        @machines.each do |name, config|
+          folders[name] = config.synced_folders
+        end
+        folders
       end
     end
   end

@@ -1,8 +1,8 @@
 require 'optparse'
 
 module Avsh
-  # Glue code to extract config options from the environment, parse options from
-  # ARGV, and then hook everything up
+  # Simple class to extract config options from the environment, parse options
+  # from ARGV, and then hook everything up.
   class CLI
     def initialize(environment, host_directory)
       @host_directory = host_directory
@@ -15,12 +15,13 @@ module Avsh
       # May exit at this point if "--help" or "--version" supplied
       options, command = ArgumentParser.parse(argv)
       logger = Logger.new(options[:debug])
-      execute(command.join(' '), logger, options[:machine])
+      execute(command.join(' '), logger, options[:reconnect], options[:machine])
     end
 
     private
 
-    def execute(command, logger, desired_machine = nil)
+    # rubocop:disable Metrics/MethodLength
+    def execute(command, logger, reconnect = false, desired_machine = nil)
       reader = VagrantfileReader.new(logger, @vagrant_cwd, @vagrantfile_name)
       matcher = MachineGuestDirMatcher.new(logger, @vagrant_cwd,
                                            reader.synced_folders_by_machine)
@@ -30,7 +31,10 @@ module Avsh
 
       multiplex_manager = SshMultiplexManager.new(logger, machine_name,
                                                   @vagrant_cwd)
-      executor = SshCommandExecutor.new(logger, machine_name, multiplex_manager)
+      multiplex_manager.initialize_socket_if_needed(reconnect)
+
+      executor = SshCommandExecutor.new(logger, machine_name,
+                                        multiplex_manager.controlmaster_path)
       executor.execute(guest_dir, command)
     end
   end
