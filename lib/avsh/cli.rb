@@ -4,39 +4,32 @@ module Avsh
   # Simple class to extract config options from the environment, parse options
   # from ARGV, and then hook everything up.
   class CLI
-    def initialize(environment, host_directory)
-      @host_directory = host_directory
+    def initialize(environment)
       # See https://www.vagrantup.com/docs/other/environmental-variables.html
-      @vagrant_cwd = environment.fetch('VAGRANT_CWD', host_directory)
+      @vagrant_cwd = environment.fetch('VAGRANT_CWD', nil)
       @vagrantfile_name = environment.fetch('VAGRANT_VAGRANTFILE', nil)
     end
 
-    def parse_args_and_execute(argv)
+    # rubocop:disable Metrics/AbcSize
+    def parse_args_and_execute(host_directory, argv)
       # May exit at this point if "--help" or "--version" supplied
       options, command = ArgumentParser.parse(argv)
+
       logger = Logger.new(options[:debug])
-      machine_name, guest_dir = find_targets(logger, options[:machine])
-      execute(logger, command.join(' '), machine_name, guest_dir,
-              options[:reconnect])
-    end
+      reader = VagrantfileReader.new(logger, host_directory, @vagrant_cwd,
+                                     @vagrantfile_name)
 
-    private
+      matcher = MachineGuestDirMatcher.new(logger, reader.vagrantfile_path,
+                                           reader.config)
+      machine_name, guest_dir = matcher.match(host_directory, options[:machine])
 
-    def find_targets(logger, desired_machine = nil)
-      reader = VagrantfileReader.new(logger, @vagrant_cwd, @vagrantfile_name)
-      matcher = MachineGuestDirMatcher.new(logger, @vagrant_cwd,
-                                           reader.synced_folders_by_machine)
-      matcher.match(reader.default_machine, @host_directory, desired_machine)
-    end
-
-    def execute(logger, command, machine_name, guest_dir, reconnect = false)
       multiplex_manager = SshMultiplexManager.new(logger, machine_name,
-                                                  @vagrant_cwd)
-      multiplex_manager.initialize_socket_if_needed(reconnect)
+                                                  reader.vagrantfile_path)
+      multiplex_manager.initialize_socket_if_needed(options[:reconnect])
 
       executor = SshCommandExecutor.new(logger, machine_name,
                                         multiplex_manager.controlmaster_path)
-      executor.execute(guest_dir, command)
+      executor.execute(guest_dir, command.join(' '))
     end
   end
 end

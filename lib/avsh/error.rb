@@ -12,6 +12,15 @@ module Avsh
     end
   end
 
+  # Indicates user specified a machine with the "--machine" argument, but it
+  # wasn't found in the Vagrantfile
+  class MachineNotFoundError < Error
+    def initialize(machine_name, vagrantfile_path)
+      super("avsh could\'t find the machine named '#{machine_name}' in the " \
+        "Vagrantfile located at '#{vagrantfile_path}'")
+    end
+  end
+
   # Indicates failure to find Vagrantfile
   class VagrantfileNotFoundError < Error
     def initialize(vagrantfile_dir)
@@ -36,7 +45,7 @@ module Avsh
     def initialize(command, status, stdout, stderr)
       super(
         'avsh got an error while trying to close the SSH connection with the ' \
-        "the command #{command}.\nStatus: #{status}\n" \
+        "the command '#{command}'\nStatus: #{status}\n" \
         "Output: #{stdout}#{stderr}"
       )
     end

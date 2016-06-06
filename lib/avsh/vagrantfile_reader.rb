@@ -5,27 +5,24 @@ module Avsh
   # Vagrantfile in VagrantfileEnvironment, which will communicate with a dummy
   # Vagrant module.
   class VagrantfileReader
-    def initialize(logger, vagrantfile_dir, vagrantfile_name = nil)
+    attr_reader :vagrantfile_path
+
+    def initialize(logger, host_directory, vagrant_cwd = nil,
+                   vagrantfile_name = nil)
       @logger = logger
-      @vagrantfile_path = find_vagrantfile(vagrantfile_dir, vagrantfile_name)
+      @vagrantfile_path = find_vagrantfile(host_directory, vagrant_cwd,
+                                           vagrantfile_name)
     end
-
-    def default_machine
-      config.find_primary || config.first_machine
-    end
-
-    def synced_folders_by_machine
-      config.collect_folders_by_machine
-    end
-
-    private
 
     def config
       # Raises VagrantfileEvalError on failure
       @config ||= VagrantfileEnvironment.evaluate(@logger, @vagrantfile_path)
     end
 
-    def find_vagrantfile(vagrantfile_dir, vagrantfile_name = nil)
+    private
+
+    def find_vagrantfile(host_directory, vagrant_cwd = nil,
+                         vagrantfile_name = nil)
       filenames_to_check =
         if vagrantfile_name
           [vagrantfile_name]
@@ -35,9 +32,14 @@ module Avsh
           %w(Vagrantfile vagrantfile)
         end
 
-      filenames_to_check.each do |filename|
-        path = File.join(vagrantfile_dir, filename)
-        return path if File.readable? path
+      cur_directory = vagrant_cwd || host_directory
+      loop do
+        filenames_to_check.each do |filename|
+          path = File.join(cur_directory, filename)
+          return path if File.readable? path
+        end
+        break if cur_directory == '/'
+        cur_directory = File.dirname(cur_directory)
       end
 
       # Nothing found

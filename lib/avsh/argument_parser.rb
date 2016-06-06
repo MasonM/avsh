@@ -9,9 +9,9 @@ module Avsh
       parser = OptionParser.new do |opts|
         opts.banner = 'Usage: avsh [options] [command]'
 
-        opts.on('-m', '--machine', 'Target Vagrant machine', '(if not ' \
-                'given, will infer from Vagrantfile. See README.md for ' \
-                'details.') do |machine|
+        opts.on('-m', '--machine <machine>', 'Target Vagrant machine',
+                '(if not given, will infer from Vagrantfile. See README.md ' \
+                'for details.') do |machine|
           options[:machine] = machine
         end
 

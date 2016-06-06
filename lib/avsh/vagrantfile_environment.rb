@@ -21,7 +21,7 @@ module Avsh
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
 
-      dummy_configure
+      dummy_configure.parsed_config
     end
 
     # Dummy Vagrant module that stubs out everything except what's needed to
@@ -48,7 +48,8 @@ module Avsh
 
     # Dummy Configure object to collect the config details.
     class Configure
-      attr_reader :synced_folders, :primary_machine, :machine_name
+      attr_reader :synced_folders, :machine_name
+
       def initialize
         @synced_folders = {}
         @machines = []
@@ -74,13 +75,38 @@ module Avsh
         self
       end
 
+      def parsed_config
+        ParsedConfig.new(@synced_folders, @machines, @primary_machine)
+      end
+    end
+
+    # Encapsulates parsed config details and operations on them
+    class ParsedConfig
+      attr_reader :primary_machine
+
+      def initialize(synced_folders, machines, primary_machine)
+        @synced_folders = synced_folders
+        @machines = machines
+        @primary_machine = primary_machine
+      end
+
+      def has_machine?(machine_name)
+        @machines.include?(machine_name)
+      end
+
       def first_machine
         first = @machines.first
-        first ? first.machine_name : :global
+        first ? first.machine_name : 'default'
       end
 
       def collect_folders_by_machine
-        folders = { global: @synced_folders }
+        folders = { 'default' => @synced_folders }
+
+        if !@synced_folders.value?('/vagrant') && !@synced_folders.key?('.')
+          # Add default /vagrant share unless overriden
+          folders['default']['.'] = '/vagrant'
+        end
+
         @machines.each do |name, config|
           folders[name] = config.synced_folders
         end

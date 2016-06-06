@@ -31,19 +31,19 @@ $ avsh 'grep synced_folder /vagrant/Vagrantfile'
   config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
 ```
 
-# Caveats and Requirements
+# Caveats/Limitations
 
-avsh has to make several assumptions in order to achieve its performance goals,
-which means it may not be appropriate for your setup. In particular:
+avsh makes a number of assumptions and shortcuts in order to achieve its
+performance goals, so it might not work (or be appropriate) for your setup.
+Notable limitations:
 
-* Only Linux and OS X are supported. Probably will work on other Unices, but
-  it's only been tested on Ubuntu 15.10 and OS X 10.11.
-* Complex Vagrantfiles that have side-effects (e.g. IO operations) may not be
-  parsed correctly.
+* Vagrantfiles are evaluated inside a fake Vagrant environment, which may cause
+  strange things to happen for Vagrantfiles that hook tightly into Vagrant.
+* Only runs on Linux and OS X. Probably will work on other Unices, but it's only
+  been tested on Ubuntu 15.10 and OS X 10.11.
+* No merging of multiple Vagrantfiles.
 * SSH connection details are cached, and must be manually cleared with
-  `avsh --reconnect` if changed.
-* If Vagrant is not installed using the [standard installer](https://www.vagrantup.com/downloads.html),
-  avsh may not be able to find your Vagrant environment.
+  `avsh --reconnect` if the SSH configuration is changed.
 
 # Installation
 
@@ -65,13 +65,15 @@ for a login shell. If you're in a synced folder, it will change to the
 corresponding directory on the guest before running the command or starting the
 shell. Otherwise, it changes to `/vagrant`.
 
-For multi-machine environments, avsh will infer the machine using synced folders,
-using the first defined machine that maps the folder you're in. If none are
-found, it will use the primary machine if one exists, else it uses the first
-defined machine.
+For multi-machine environments, avsh will infer the machine to connect to by
+matching the current directory with the synced folders in your Vagrantfile. If
+none are found to match, it will use the primary machine if one exists, else it
+uses the first defined machine. You can use the `avsh -m <machine_name>` to
+explicitly specify the machine you'd like to connect to.
 
 # Why not make this a Vagrant plugin?
 
-While it may be possible to do this with a plugin without sacrificing
-performance, I wasn't able to get it to work. The overhead of just getting to
-the point of executing a command in a plugin is nearly 1 second on my computer.
+Because I couldn't get this to work as a plugin without sacrificing performance.
+The overhead of just getting to the point of executing a command in a plugin is
+nearly 1 second on my computer, and I couldn't find a way to decrease that
+significantly.

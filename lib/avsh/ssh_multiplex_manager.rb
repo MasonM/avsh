@@ -3,19 +3,15 @@ require 'open3'
 module Avsh
   # Manages SSH multiplexing
   class SshMultiplexManager
-    def initialize(logger, machine_name, vagrantfile_dir)
+    def initialize(logger, machine_name, vagrantfile_path)
       @logger = logger
       @machine_name = machine_name
-      @vagrantfile_dir = vagrantfile_dir
+      @vagrantfile_dir = File.dirname(vagrantfile_path)
     end
 
     def initialize_socket_if_needed(reconnect = false)
-      if reconnect
-        close_ssh_socket
-        initialize_socket
-      elsif !File.socket?(controlmaster_path)
-        initialize_socket
-      end
+      close_ssh_socket if reconnect && File.socket?(controlmaster_path)
+      initialize_socket unless File.socket?(controlmaster_path)
     end
 
     # Returns the path to the socket file for the multiplex connection.
@@ -48,12 +44,12 @@ module Avsh
     end
 
     def close_ssh_socket
-      ssh_cmd = ['ssh', '-O stop', "-o ControlPath #{controlmaster_path}",
+      ssh_cmd = ['ssh', '-O', 'exit', "-o ControlPath #{controlmaster_path}",
                  @machine_name]
       @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
       stdout, stderr, status = Open3.capture3(*ssh_cmd)
-      if !status.success? || !stderr.empty?
-        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), sttatus, stderr,
+      unless status.success?
+        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), status, stderr,
                                          stdout)
       end
     end
@@ -63,7 +59,7 @@ module Avsh
     def read_vagrant_ssh_config
       ssh_config_command = ['vagrant', 'ssh-config', @machine_name]
       @logger.debug('Executing vagrant ssh-config command: ' +
-        ssh_config_command)
+                    ssh_config_command.to_s)
       stdout, stderr, status = Open3.capture3(
         { 'VAGRANT_CWD' => @vagrantfile_dir },
         *ssh_config_command

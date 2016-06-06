@@ -1,4 +1,7 @@
 AllCops:
+  ExtraDetails: true
+  DisplayCopNames: true
+  DisplayStyleGuide: true
   Include:
     - '**/Rakefile'
     - 'spec/**'
