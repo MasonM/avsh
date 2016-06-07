@@ -13,15 +13,18 @@ module Avsh
     # rubocop:disable Metrics/AbcSize
     def execute(host_directory, options, command)
       logger = Logger.new(options[:debug])
-      reader = VagrantfileReader.new(logger, host_directory, @vagrant_cwd,
-                                     @vagrantfile_name)
 
-      matcher = MachineGuestDirMatcher.new(logger, reader.vagrantfile_path,
-                                           reader.config)
+      finder = VagrantfileFinder.new(logger, @vagrant_cwd, @vagrantfile_name)
+      vagrantfile_path = finder.find(host_directory)
+
+      evaluator = VagrantfileEnvironment::Evaluator.new(logger)
+      config = evaluator.evaluate(vagrantfile_path)
+
+      matcher = MachineGuestDirMatcher.new(logger, vagrantfile_path, config)
       machine_name, guest_dir = matcher.match(host_directory, options[:machine])
 
       multiplex_manager = SshMultiplexManager.new(logger, machine_name,
-                                                  reader.vagrantfile_path)
+                                                  vagrantfile_path)
       multiplex_manager.initialize_socket_if_needed(options[:reconnect])
 
       executor = SshCommandExecutor.new(logger, machine_name,

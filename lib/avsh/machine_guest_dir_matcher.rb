@@ -18,32 +18,41 @@ module Avsh
         raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
       end
 
-      default_machine = desired_machine || @vagrant_config.primary_machine ||
-                        @vagrant_config.first_machine
+      synced_folders = @vagrant_config.collect_folders_by_machine
+      synced_folders = synced_folders[desired_machine] if desired_machine
       real_host_directory = File.realpath(host_directory)
 
-      synced_folders = @vagrant_config.collect_folders_by_machine
+      match_machine_and_synced_folders(real_host_directory, synced_folders) ||
+        default_fallback(real_host_directory, desired_machine)
+    end
+
+    private
+
+    def match_machine_and_synced_folders(real_host_directory, synced_folders)
       @logger.debug('Attempting to match against synced folders: ' +
                     synced_folders.to_s)
 
-      synced_folders = synced_folders[desired_machine] if desired_machine
       guest_dir = nil
       match = synced_folders.find do |_, inner_folders|
         guest_dir = match_synced_folder(inner_folders, real_host_directory)
       end
 
       if guest_dir
-        @logger.debug("Found guest path for '#{real_host_directory}' with machine " \
-          "'#{match[0]}' and directory '#{guest_dir}'")
+        @logger.debug("Found guest path for '#{real_host_directory}' with " \
+                      "machine '#{match[0]}' and directory '#{guest_dir}'")
         return match[0], guest_dir
       end
+      nil
+    end
+
+    def default_fallback(real_host_directory, desired_machine = nil)
+      default_machine = desired_machine || @vagrant_config.primary_machine ||
+                        @vagrant_config.first_machine
       @logger.debug('Couldn\'t find guest directory for ' \
         "'#{real_host_directory}', falling back to #{default_machine} for " \
         'the machine and \'/vagrant\' for the guest directory')
-      return [default_machine, '/vagrant']
+      [default_machine, '/vagrant']
     end
-
-    private
 
     def match_synced_folder(folders, host_directory)
       vagrantfile_dir = File.dirname(@vagrantfile_path)
