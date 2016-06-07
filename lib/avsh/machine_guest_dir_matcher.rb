@@ -22,13 +22,6 @@ module Avsh
                         @vagrant_config.first_machine
       real_host_directory = File.realpath(host_directory)
 
-      match_by_synced_folder(real_host_directory, desired_machine) ||
-        default_fallback(real_host_directory, default_machine)
-    end
-
-    private
-
-    def match_by_synced_folder(host_directory, desired_machine)
       synced_folders = @vagrant_config.collect_folders_by_machine
       @logger.debug('Attempting to match against synced folders: ' +
                     synced_folders.to_s)
@@ -36,23 +29,21 @@ module Avsh
       synced_folders = synced_folders[desired_machine] if desired_machine
       guest_dir = nil
       match = synced_folders.find do |_, inner_folders|
-        guest_dir = match_synced_folder(inner_folders, host_directory)
+        guest_dir = match_synced_folder(inner_folders, real_host_directory)
       end
 
       if guest_dir
-        @logger.debug("Found guest path for '#{host_directory}' with machine " \
-          "#{match[0]} and directory '#{guest_dir}'")
+        @logger.debug("Found guest path for '#{real_host_directory}' with machine " \
+          "'#{match[0]}' and directory '#{guest_dir}'")
         return match[0], guest_dir
       end
-      nil
+      @logger.debug('Couldn\'t find guest directory for ' \
+        "'#{real_host_directory}', falling back to #{default_machine} for " \
+        'the machine and \'/vagrant\' for the guest directory')
+      return [default_machine, '/vagrant']
     end
 
-    def default_fallback(host_directory, default_machine)
-      @logger.debug('Couldn\'t find guest directory for ' \
-        "'#{host_directory}', falling back to #{default_machine} for " \
-        'the machine and \'/vagrant\' for the guest directory')
-      [default_machine, '/vagrant']
-    end
+    private
 
     def match_synced_folder(folders, host_directory)
       vagrantfile_dir = File.dirname(@vagrantfile_path)

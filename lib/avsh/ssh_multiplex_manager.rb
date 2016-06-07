@@ -40,6 +40,7 @@ module Avsh
       Open3.popen3(*ssh_master_socket_cmd) do |stdin, _stdout, stderr, _|
         raise SshMasterSocketError, stderr.read if stdin.closed?
         stdin.puts(ssh_config)
+        stdin.close
       end
     end
 

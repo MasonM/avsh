@@ -48,11 +48,11 @@ module Avsh
 
     # Dummy Configure object to collect the config details.
     class Configure
-      attr_reader :synced_folders, :machine_name
+      attr_reader :synced_folders
 
       def initialize
         @synced_folders = {}
-        @machines = []
+        @machines = {}
         @primary_machine = nil
       end
 
@@ -65,7 +65,7 @@ module Avsh
         machine_config = Configure.new
         @primary_machine = machine_name.to_s if is_primary
         @machines[machine_name.to_s] = machine_config
-        yield config
+        yield machine_config
       end
 
       # Ensure this object continues to be used when defining a multi-machine
@@ -96,7 +96,7 @@ module Avsh
 
       def first_machine
         first = @machines.first
-        first ? first.machine_name : 'default'
+        first ? first[0] : 'default'
       end
 
       def collect_folders_by_machine

@@ -1,8 +1,8 @@
 require 'optparse'
 
 module Avsh
-  # Simple class to extract config options from the environment, parse options
-  # from ARGV, and then hook everything up.
+  # Simple class to extract config options from the environment and hook
+  # everything up.
   class CLI
     def initialize(environment)
       # See https://www.vagrantup.com/docs/other/environmental-variables.html
@@ -11,10 +11,7 @@ module Avsh
     end
 
     # rubocop:disable Metrics/AbcSize
-    def parse_args_and_execute(host_directory, argv)
-      # May exit at this point if "--help" or "--version" supplied
-      options, command = ArgumentParser.parse(argv)
-
+    def execute(host_directory, options, command)
       logger = Logger.new(options[:debug])
       reader = VagrantfileReader.new(logger, host_directory, @vagrant_cwd,
                                      @vagrantfile_name)

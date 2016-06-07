@@ -71,11 +71,12 @@ module Avsh
     end
   end
 
-  # Indicates failure to establish SSH master socket for multiplexing
+  # Indicates pipe closed while trying to use OpenSSH to establish a SSH master
+  # socket for multiplexing
   class SshMasterSocketError < Error
     def initialize(error)
-      super('avsh failed to establish a SSH ControlMaster socket. ' \
-        "Error from SSH: '#{error}'")
+      super('avsh failed to establish a SSH ControlMaster socket due to a ' \
+            "broken pipe. Error from SSH: '#{error}'")
     end
   end
 end
