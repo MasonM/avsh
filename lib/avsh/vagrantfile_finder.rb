@@ -7,24 +7,22 @@ module Avsh
       @vagrantfile_name = vagrantfile_name
     end
 
+    # Based off https://github.com/mitchellh/vagrant/blob/646414b347d4694de24693d226c35e42a88dea0e/lib/vagrant/environment.rb#L693
     def find(host_directory)
-      filenames_to_check =
-        if @vagrantfile_name
-          [@vagrantfile_name]
-        else
-          # Vagrant allows the Vagrantfile to be stored as "vagrantfile", so we
-          # have to check for both.
-          %w(Vagrantfile vagrantfile)
-        end
+      filenames_to_check = @vagrantfile_name ? [@vagrantfile_name] : []
 
-      cur_directory = @vagrant_cwd || host_directory
+      # Add defaults. Vagrant allows the Vagrantfile to be stored as
+      # "vagrantfile", so we have to check for both. See https://github.com/mitchellh/vagrant/blob/646414b347d4694de24693d226c35e42a88dea0e/lib/vagrant/environment.rb#L901
+      filenames_to_check ||= %w(Vagrantfile vagrantfile)
+
+      cur_directory = Pathname.new(@vagrant_cwd || host_directory)
       loop do
         filenames_to_check.each do |filename|
-          path = File.join(cur_directory, filename)
-          return path if File.readable? path
+          path = cur_directory.join(filename)
+          return path if path.readable?
         end
-        break if cur_directory == '/'
-        cur_directory = File.dirname(cur_directory)
+        break if cur_directory.root? || cur_directory.nil?
+        cur_directory = cur_directory.parent
       end
 
       # Nothing found

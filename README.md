@@ -6,14 +6,15 @@ automatically sets up SSH multiplexing the first time it's run, eliminating SSH
 connection overhead on subsequent invocations.
 
 ```sh
-$ time vagrant ssh -c 'hostname'
-www.jci.dev
+$ export TIME='WALL TIME=%es CPU=%P'
+$ /usr/bin/time vagrant ssh -c 'hostname'
+vagrant-ubuntu-trusty-64
 Connection to 127.0.0.1 closed.
-1.11s user 0.16s system 77% cpu 1.652 total
+WALL TIME=2.96s CPU=80%
 
-$ time avsh 'hostname'
-www.jci.dev
-0.03s user 0.00s system 32% cpu 0.086 total
+$ /usr/bin/time avsh 'hostname'
+vagrant-ubuntu-trusty-64
+WALL TIME=0.08s CPU=51%
 ```
 
 Also, it detects when you're working in a synced folder, and automatically
