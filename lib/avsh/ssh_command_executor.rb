@@ -21,7 +21,7 @@ module Avsh
       @logger.debug "Executing '#{ssh_command}'"
 
       # Script execution ends here, since SSH will replace the current process.
-      exec(*ssh_command)
+      Kernel.exec(*ssh_command)
 
       # Shouldn't be possible to get to this point
       raise ExecSshError

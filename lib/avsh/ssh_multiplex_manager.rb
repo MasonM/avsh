@@ -3,10 +3,11 @@ require 'open3'
 module Avsh
   # Manages SSH multiplexing
   class SshMultiplexManager
-    def initialize(logger, machine_name, vagrantfile_path)
+    def initialize(logger, machine_name, vagrantfile_path, vagrant_home)
       @logger = logger
       @machine_name = machine_name
       @vagrantfile_dir = File.dirname(vagrantfile_path)
+      @vagrant_home = File.expand_path(vagrant_home)
     end
 
     def initialize_socket_if_needed(reconnect = false)
@@ -15,16 +16,18 @@ module Avsh
     end
 
     # Returns the path to the socket file for the multiplex connection.
-    # We put the socket file in /tmp/, since that seems like the most portable
-    # option that doesn't require any extra work from the user. This means the
-    # socket file will be lost on reboot, but that just means there will be a
-    # minor delay as it re-establishes the socket the next time avsh is run.
+    # We put the socket file in Vagrant's temp directory because that doesn't
+    # require any extra work from the user. We don't want to put it in /tmp/,
+    # because having the socket file be globally-readable could be a security
+    # issue in certain environments (anyone who can access the socket can hijack
+    # the connection).
     #
-    # Another option would be to use VAGRANT_CWD/.vagrant/, which is
-    # what vassh does, but Vagrant manages that directory and I don't think it's
-    # safe to be storing foreign files there.
+    # Currently, Vagrant doesn't clean out it's tmp directory, so we don't have
+    # to worry about the socket disappearing, but that could change in the
+    # future. If that happens, I'll probably have to add a config option to let
+    # users specify the path.
     def controlmaster_path
-      "/tmp/avsh_#{@machine_name}_controlmaster.sock"
+      "#{@vagrant_home}/tmp/avsh_#{@machine_name}_controlmaster.sock"
     end
 
     private
@@ -80,16 +83,16 @@ module Avsh
     def ssh_master_socket_cmd
       [
         'ssh',
-        # Force TTY allocation
-        '-t', '-t',
         # Don't execute a command, just go in background immediately
         '-f', '-N',
         # Read the SSH config from stdin. Note that /dev/stdin isn't in the
         # POSIX standard, but I don't know of any modern Unix that doesn't have
         # it.
         '-F/dev/stdin',
-        # Persist socket indefinitely
-        '-o ControlPersist yes',
+        # Persist socket until it's been explicitly closed or idle for 3 hours.
+        # This is a minor precaution against evil maid attacks, though I don't
+        # know if that's actually a concern for anyone's Vagrant setup.
+        '-o ControlPersist 3h',
         # Auto-connect
         '-o ControlMaster auto',
         # Path to control socket
