@@ -34,7 +34,7 @@ module Avsh
         end
       end
       command = parser.order!(argv)
-      [options, command]
+      { options: options, command: command }
     end
   end
 end

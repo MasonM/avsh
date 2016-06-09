@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Avsh
   # Finds full path for the Vagrantfile to use
   class VagrantfileFinder
