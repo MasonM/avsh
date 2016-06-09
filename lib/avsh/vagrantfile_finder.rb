@@ -3,8 +3,7 @@ require 'pathname'
 module Avsh
   # Finds full path for the Vagrantfile to use
   class VagrantfileFinder
-    def initialize(logger, vagrant_cwd = nil, vagrantfile_name = nil)
-      @logger = logger
+    def initialize(vagrant_cwd = nil, vagrantfile_name = nil)
       @vagrant_cwd = vagrant_cwd
       @vagrantfile_name = vagrantfile_name
     end

@@ -26,7 +26,7 @@ module Avsh
     def execute_command(host_directory, command, options)
       logger = Logger.new(options[:debug])
 
-      finder = VagrantfileFinder.new(logger, @vagrant_cwd, @vagrantfile_name)
+      finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
       vagrantfile_path = finder.find(host_directory)
 
       evaluator = VagrantfileEvaluator.new(logger)
