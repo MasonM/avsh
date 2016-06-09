@@ -32,16 +32,17 @@ $ avsh 'grep synced_folder /vagrant/Vagrantfile'
   config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
 ```
 
-# Caveats/Limitations
+# Caveats
 
 avsh makes a number of assumptions and shortcuts in order to achieve its
 performance goals, so it might not work (or be appropriate) for your setup.
-Notable limitations:
 
 * Vagrantfiles are evaluated inside a fake Vagrant environment, which may cause
-  strange things to happen for Vagrantfiles that hook tightly into Vagrant.
-* Only runs on Linux and OS X. Probably will work on other Unices, but it's only
-  been tested on Ubuntu 15.10 and OS X 10.11.
+  issues with complex Vagrantfiles that have conditional logic using Vagrant's
+  API. Specifically, the `Vagrant.has_plugin?` method always returns true, and
+  other methods on the `Vagrant` module are stubbed out.
+* The host must be Linux or OS X 10.7+. It'll probably work on other Unices, but
+  hasn't been tested. No limitations on the guest.
 * No merging of multiple Vagrantfiles.
 * SSH connection details are cached, and must be manually cleared with
   `avsh --reconnect` if the SSH configuration is changed.

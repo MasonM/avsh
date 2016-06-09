@@ -12,7 +12,7 @@ module Avsh
         opts.on('-m', '--machine <machine>', 'Target Vagrant machine',
                 '(if not given, will infer from Vagrantfile. See README.md ' \
                 'for details.') do |machine|
-          options[:machine] = machine
+          options[:machine] = machine.strip
         end
 
         opts.on('-r', '--reconnect', 'Re-initialize SSH connection') do

@@ -27,7 +27,7 @@ module Avsh
       super('avsh couldn\'t find the Vagrantfile for the directory ' \
         "#{vagrantfile_dir}\n" \
         'This usually means you need to specify the VAGRANT_CWD ' \
-        'configuration option. See README.md for details.'
+        'environment variable. See README.md for details.'
       )
     end
   end
