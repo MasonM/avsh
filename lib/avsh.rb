@@ -1,5 +1,5 @@
 require 'avsh/error'
-require 'avsh/logger'
+require 'avsh/debug_logger'
 require 'avsh/version'
 require 'avsh/machine_guest_dir_matcher'
 require 'avsh/ssh_multiplex_manager'
