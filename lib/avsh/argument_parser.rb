@@ -36,5 +36,6 @@ module Avsh
       command = parser.order!(argv)
       { options: options, command: command }
     end
+    # rubocop:enable all
   end
 end

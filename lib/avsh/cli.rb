@@ -44,5 +44,6 @@ module Avsh
                                         multiplex_manager.controlmaster_path)
       executor.execute(guest_dir, command.join(' '))
     end
+    # rubocop:enable all
   end
 end

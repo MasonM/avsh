@@ -10,51 +10,56 @@ module Avsh
       @vagrant_config = vagrant_config
     end
 
-    # First checks if the current directory is the Vagrantfile directory, then
-    # tries to match against synced_folder declarations, then falls back to the
-    # default
+    # Tries to match host directory against synced_folder declarations, then
+    # falls back to the default
     def match(host_directory, desired_machine = nil)
-      if desired_machine && !@vagrant_config.has_machine?(desired_machine)
+      if desired_machine && !@vagrant_config.machine?(desired_machine)
         raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
       end
 
-      synced_folders = @vagrant_config.collect_folders_by_machine
-      synced_folders = synced_folders[desired_machine] if desired_machine
+      synced_folders_by_machine = @vagrant_config.collect_folders_by_machine
       real_host_directory = File.realpath(host_directory)
 
-      match_machine_and_synced_folders(real_host_directory, synced_folders) ||
-        default_fallback(real_host_directory, desired_machine)
+      if desired_machine
+        synced_folders = synced_folders_by_machine[desired_machine]
+        guest_dir = match_synced_folder(real_host_directory, synced_folders)
+        return [desired_machine, guest_dir] if guest_dir
+      else
+        match = match_machine_and_synced_folders(real_host_directory,
+                                                 synced_folders_by_machine)
+        return match if match
+      end
+      default_fallback(real_host_directory, desired_machine)
     end
 
     private
 
-    def match_machine_and_synced_folders(real_host_directory, synced_folders)
-      @logger.debug('Attempting to match against synced folders: ' +
-                    synced_folders.to_s)
+    def match_machine_and_synced_folders(host_directory,
+                                         synced_folders_by_machine)
+      @logger.debug("Attempting to match '#{host_directory}' against " \
+                    'synced folders: ' + synced_folders_by_machine.to_s)
 
-      guest_dir = nil
-      match = synced_folders.find do |_, inner_folders|
-        guest_dir = match_synced_folder(inner_folders, real_host_directory)
-      end
-
-      if guest_dir
-        @logger.debug("Found guest path for '#{real_host_directory}' with " \
-                      "machine '#{match[0]}' and directory '#{guest_dir}'")
-        return match[0], guest_dir
+      synced_folders_by_machine.each do |machine_name, synced_folders|
+        guest_dir = match_synced_folder(host_directory, synced_folders)
+        next unless guest_dir
+        @logger.debug("Found guest path for '#{host_directory}' with " \
+                      "machine '#{machine_name}' and directory " \
+                      "'#{guest_dir}'")
+        return machine_name, guest_dir
       end
       nil
     end
 
-    def default_fallback(real_host_directory, desired_machine = nil)
+    def default_fallback(host_directory, desired_machine = nil)
       default_machine = desired_machine || @vagrant_config.primary_machine ||
                         @vagrant_config.first_machine
       @logger.debug('Couldn\'t find guest directory for ' \
-        "'#{real_host_directory}', falling back to #{default_machine} for " \
+        "'#{host_directory}', falling back to #{default_machine} for " \
         'the machine and \'/vagrant\' for the guest directory')
       [default_machine, '/vagrant']
     end
 
-    def match_synced_folder(folders, host_directory)
+    def match_synced_folder(host_directory, folders)
       vagrantfile_dir = File.dirname(@vagrantfile_path)
       folders.each do |src, dest|
         real_src = File.realpath(src, vagrantfile_dir)

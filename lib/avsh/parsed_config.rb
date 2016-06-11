@@ -9,7 +9,7 @@ module Avsh
       @primary_machine = primary_machine
     end
 
-    def has_machine?(machine_name)
+    def machine?(machine_name)
       @machines.include?(machine_name)
     end
 

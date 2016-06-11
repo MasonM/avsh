@@ -14,6 +14,7 @@ module Avsh
         # exist. I've never seen that before, though.
         true
       end
+      # rubocop:enable all
 
       def self.configure(*)
         # Give the provided block the dummy_configure object set above in

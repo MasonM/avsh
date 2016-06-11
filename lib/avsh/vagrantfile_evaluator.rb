@@ -21,11 +21,12 @@ module Avsh
         # Eval the Vagrantfile inside VagrantfileEnvironment
         VagrantfileEnvironment.module_eval(File.read(vagrantfile_path),
                                            vagrantfile_path)
-        # rubocop:disable Lint/RescueException
+      # rubocop:disable Lint/RescueException
       rescue Exception => e
         # Re-raise with a more specific exception
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
+      # rubocop:enable all
 
       dummy_configure.parsed_config
     end
