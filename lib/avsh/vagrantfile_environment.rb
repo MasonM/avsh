@@ -2,6 +2,15 @@ module Avsh
   # This module is a horrible hack to parse out the relevant config details from
   # a Vagrantfile, without incurring the overhead of loading Vagrant.
   module VagrantfileEnvironment
+    def self.prep_vagrant_configure
+      # The dummy_configure object will be used to collect the config details.
+      # We need to set it as a class variable on Vagrant, since we can't tell
+      # the Vagrantfile to use a specific instance of Vagrant.
+      dummy_configure = Configure.new
+      Vagrant.class_variable_set(:@@configure, dummy_configure)
+      dummy_configure
+    end
+
     # Dummy Vagrant module that stubs out everything except what's needed to
     # extract config details.
     module Vagrant
@@ -17,8 +26,7 @@ module Avsh
       # rubocop:enable all
 
       def self.configure(*)
-        # Give the provided block the dummy_configure object set above in
-        # DummyVagrantEnvironment.evaluate
+        # Give the provided block the dummy_configure object set above
         yield @@configure
       end
 

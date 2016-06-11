@@ -10,22 +10,17 @@ module Avsh
     end
 
     def evaluate(vagrantfile_path)
-      # The dummy_configure object will be used to collect the config details.
-      # We need to set it as a class variable on Vagrant, since we can't tell
-      # the Vagrantfile to use a specific instance of Vagrant.
-      dummy_configure = @environment::Configure.new
-      @environment::Vagrant.class_variable_set(:@@configure, dummy_configure)
+      dummy_configure = @environment.prep_vagrant_configure
 
       @logger.debug "Parsing Vagrantfile '#{vagrantfile_path}' ..."
+
       begin
         # Eval the Vagrantfile inside VagrantfileEnvironment
         @environment.module_eval(File.read(vagrantfile_path), vagrantfile_path)
-      # rubocop:disable Lint/RescueException
-      rescue Exception => e
+      rescue ScriptError, StandardError => e
         # Re-raise with a more specific exception
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
-      # rubocop:enable all
 
       dummy_configure.parsed_config
     end
