@@ -6,13 +6,12 @@ automatically sets up SSH multiplexing the first time it's run, eliminating SSH
 connection overhead on subsequent invocations.
 
 ```sh
-$ export TIME='WALL TIME=%es CPU=%P'
-$ /usr/bin/time vagrant ssh -c 'hostname'
+$ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- vagrant ssh -c 'hostname'
 vagrant-ubuntu-trusty-64
 Connection to 127.0.0.1 closed.
 WALL TIME=2.96s CPU=80%
 
-$ /usr/bin/time avsh 'hostname'
+$ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- avsh 'hostname'
 vagrant-ubuntu-trusty-64
 WALL TIME=0.08s CPU=51%
 ```
@@ -22,11 +21,11 @@ switches to the corresponding directory on the guest before executing commands
 or starting a login shell.
 
 ```sh
-$ echo "host=`hostname`	current directory=$PWD"
-host=masons-laptop      current directory=/home/masonm/asci/content
+$ echo "host=`hostname`, current directory=$PWD"
+host=masons-laptop, current directory=/home/masonm/asci/content
 
-$ avsh 'echo "host=`hostname`	current directory=$PWD"'
-host=www.jci.dev        current directory=/var/www/jci/content
+$ avsh 'echo "host=`hostname`, current directory=$PWD"'
+host=www.jci.dev, current directory=/var/www/jci/content
 
 $ avsh 'grep synced_folder /vagrant/Vagrantfile'
   config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
