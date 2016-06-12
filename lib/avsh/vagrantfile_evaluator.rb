@@ -22,7 +22,7 @@ module Avsh
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
 
-      dummy_configure.parsed_config
+      dummy_configure.parsed_config(ParsedConfig)
     end
   end
 end

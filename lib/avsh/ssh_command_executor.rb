@@ -9,13 +9,17 @@ module Avsh
       @controlmaster_path = controlmaster_path
     end
 
-    def execute(guest_directory, command)
-      ssh_command = ['ssh', '-o ControlPath ' + @controlmaster_path]
+    def execute(command, guest_directory = nil)
+      ssh_command = [
+        'ssh',
+        '-o ControlPath ' + @controlmaster_path
+      ]
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'
         ssh_command.push('-t') # force TTY allocation
       end
+      command = "cd #{guest_directory}; #{command}" if guest_directory
       ssh_command.push(@machine_name, "cd #{guest_directory}; #{command}")
 
       @logger.debug "Executing '#{ssh_command}'"

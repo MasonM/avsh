@@ -48,8 +48,12 @@ module Avsh
     end
 
     def close_ssh_socket
-      ssh_cmd = ['ssh', '-O', 'exit', "-o ControlPath #{controlmaster_path}",
-                 @machine_name]
+      ssh_cmd = [
+        'ssh',
+        '-O', 'exit',
+        "-o ControlPath #{controlmaster_path}",
+        @machine_name
+      ]
       @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
       stdout, stderr, status = Open3.capture3(*ssh_cmd)
       unless status.success?
@@ -97,7 +101,7 @@ module Avsh
         '-o ControlMaster auto',
         # Path to control socket
         "-o ControlPath #{controlmaster_path}",
-        # Hostname set in ssh_config
+        # This is the hostname returned by "vagrant ssh-config"
         @machine_name
       ]
     end

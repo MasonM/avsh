@@ -13,14 +13,13 @@ module Avsh
     # Tries to match host directory against synced_folder declarations, then
     # falls back to the default
     def match(host_directory, desired_machine = nil)
-      if desired_machine && !@vagrant_config.machine?(desired_machine)
-        raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
-      end
-
       synced_folders_by_machine = @vagrant_config.collect_folders_by_machine
       real_host_directory = File.realpath(host_directory)
 
       if desired_machine
+        unless @vagrant_config.machine?(desired_machine)
+          raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
+        end
         synced_folders = synced_folders_by_machine[desired_machine]
         guest_dir = match_synced_folder(real_host_directory, synced_folders)
         return [desired_machine, guest_dir] if guest_dir
@@ -55,8 +54,8 @@ module Avsh
                         @vagrant_config.first_machine
       @logger.debug('Couldn\'t find guest directory for ' \
         "'#{host_directory}', falling back to #{default_machine} for " \
-        'the machine and \'/vagrant\' for the guest directory')
-      [default_machine, '/vagrant']
+        'the machine and nothing for guest directory (i.e. the vagrant home)')
+      [default_machine, nil]
     end
 
     def match_synced_folder(host_directory, folders)

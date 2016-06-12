@@ -35,8 +35,6 @@ module Avsh
 
     # Dummy Configure object to collect the config details.
     class Configure
-      attr_reader :synced_folders
-
       def initialize
         @synced_folders = {}
         @machines = {}
@@ -63,9 +61,18 @@ module Avsh
         self
       end
 
-      def parsed_config
-        Avsh::ParsedConfig.new(@synced_folders, @machines, @primary_machine)
+      def parsed_config(parsed_config_class)
+        machine_synced_folders = {}
+        @machines.each do |machine_name, machine_config|
+          machine_synced_folders[machine_name] = machine_config.synced_folders
+        end
+        parsed_config_class.new(@synced_folders, machine_synced_folders,
+                                @primary_machine)
       end
+
+      protected
+
+      attr_reader :synced_folders
     end
   end
 end

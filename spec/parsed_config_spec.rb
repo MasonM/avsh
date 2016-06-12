@@ -38,11 +38,9 @@ describe Avsh::ParsedConfig do
       described_class.new(
         { '/default' => '/foo/' },
         {
-          'first' => double(synced_folders: { '/foo' => '/bar' }),
-          'primary' => double(synced_folders: {}),
-          'overrides_defaults' => double(
-            synced_folders: { '/foo' => '/vagrant', '/default' => '/new' }
-          )
+          'first' => { '/foo' => '/bar' },
+          'primary' => {},
+          'overrides_defaults' => { '/foo' => '/vagrant', '/default' => '/new' }
         },
         'primary'
       )
