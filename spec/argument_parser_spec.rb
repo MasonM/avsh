@@ -4,7 +4,7 @@ describe Avsh::ArgumentParser do
   context 'with empty argv' do
     it 'returns defaults' do
       expect(described_class.parse([])).to eq(
-        options: { machine: nil, debug: false, reconnect: false },
+        options: { machine: nil, debug: false, reconnect: false, ssh_args: [] },
         command: []
       )
     end
@@ -49,12 +49,20 @@ describe Avsh::ArgumentParser do
   end
 
   context 'with machine' do
-    ['-m foo', '--machine=foo'].each do |opt|
+    [['-m', 'foo'], ['--machine=foo']].each do |opt|
       it "sets machine to 'foo' when #{opt} supplied" do
-        expect(described_class.parse([opt])).to include(
+        expect(described_class.parse(opt)).to include(
           options: a_collection_including(machine: 'foo')
         )
       end
+    end
+  end
+
+  context 'with custom ssh args' do
+    it 'sets options[:ssh_args] properly' do
+      expect(described_class.parse(['--', '-T', '-6'])).to include(
+          options: a_collection_including(ssh_args: ['-T', '-6'])
+      )
     end
   end
 end

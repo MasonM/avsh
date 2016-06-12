@@ -42,7 +42,7 @@ module Avsh
 
       executor = SshCommandExecutor.new(logger, machine_name,
                                         multiplex_manager.controlmaster_path)
-      executor.execute(command.join(' '), guest_dir)
+      executor.execute(command.join(' '), guest_dir, options[:ssh_args])
     end
     # rubocop:enable all
   end

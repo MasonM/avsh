@@ -6,7 +6,8 @@ describe Avsh::SshCommandExecutor do
   context 'with non-empty command and a guest dir' do
     it 'changes to guest dir and executes command' do
       expect(Kernel).to receive(:exec).with('ssh', '-o ControlPath /s.sock',
-                                            'foo_machine', 'cd /somedir; ls')
+                                            '-t', 'foo_machine',
+                                            'cd /somedir; ls')
       expect { subject.execute('ls', '/somedir') }.to \
         raise_error(Avsh::ExecSshError)
     end
@@ -25,7 +26,7 @@ describe Avsh::SshCommandExecutor do
   context 'with non-empty command and no guest dir' do
     it 'runs command' do
       expect(Kernel).to receive(:exec).with('ssh', '-o ControlPath /s.sock',
-                                            'foo_machine', 'pwd')
+                                            '-t', 'foo_machine', 'pwd')
       expect { subject.execute('pwd') }.to raise_error(Avsh::ExecSshError)
     end
   end

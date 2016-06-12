@@ -9,19 +9,18 @@ module Avsh
       @controlmaster_path = controlmaster_path
     end
 
-    def execute(command, guest_directory = nil)
-      ssh_command = [
-        'ssh',
-        '-o ControlPath ' + @controlmaster_path
-      ]
+    def execute(command, guest_directory = nil, user_ssh_args = [])
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'
-        ssh_command.push('-t') # force TTY allocation
       end
-      command = "cd #{guest_directory}; #{command}" if guest_directory
-      ssh_command.push(@machine_name, command)
 
+      if guest_directory
+        # Switch to guest directory before running command
+        command = "cd #{guest_directory}; #{command}"
+      end
+
+      ssh_command = ['ssh'] + ssh_args(user_ssh_args) + [@machine_name, command]
       @logger.debug "Executing '#{ssh_command}'"
 
       # Script execution ends here, since SSH will replace the current process.
@@ -29,6 +28,18 @@ module Avsh
 
       # Shouldn't be possible to get to this point
       raise ExecSshError
+    end
+
+    private
+
+    def ssh_args(user_ssh_args)
+      args = ['-o ControlPath ' + @controlmaster_path]
+      unless user_ssh_args.include?('-t') || user_ssh_args.include?('-T')
+        # Default to TTY allocation, as that's what Vagrant does.
+        # See https://github.com/mitchellh/vagrant/blob/fc1d2c29be6b19b9ee19c063e15f72283140ec8e/lib/vagrant/action/builtin/ssh_run.rb#L47
+        args << '-t'
+      end
+      args
     end
   end
 end
