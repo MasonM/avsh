@@ -14,21 +14,22 @@ module Avsh
     # falls back to the default
     def match(host_directory, desired_machine = nil)
       synced_folders_by_machine = @vagrant_config.collect_folders_by_machine
-      real_host_directory = File.realpath(host_directory)
 
       if desired_machine
         unless @vagrant_config.machine?(desired_machine)
           raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
         end
-        synced_folders = synced_folders_by_machine[desired_machine]
-        guest_dir = match_synced_folder(real_host_directory, synced_folders)
-        return [desired_machine, guest_dir] if guest_dir
-      else
-        match = match_machine_and_synced_folders(real_host_directory,
-                                                 synced_folders_by_machine)
-        return match if match
+        # Prune other machines so we only matching against the desired machine's
+        # synced folders.
+        synced_folders_by_machine.keep_if do |machine_name, _|
+          machine_name == desired_machine
+        end
       end
-      default_fallback(real_host_directory, desired_machine)
+
+      real_host_directory = File.expand_path(host_directory)
+      match = match_machine_and_synced_folders(real_host_directory,
+                                               synced_folders_by_machine)
+      match || default_fallback(real_host_directory, desired_machine)
     end
 
     private
@@ -61,7 +62,7 @@ module Avsh
     def match_synced_folder(host_directory, folders)
       vagrantfile_dir = File.dirname(@vagrantfile_path)
       folders.each do |src, dest|
-        real_src = File.realpath(src, vagrantfile_dir)
+        real_src = File.expand_path(src, vagrantfile_dir)
         next unless host_directory.start_with?(real_src)
         relative_directory = host_directory[real_src.length..-1]
         full_directory = File.join(dest, relative_directory)
