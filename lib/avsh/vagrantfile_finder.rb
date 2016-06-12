@@ -1,5 +1,3 @@
-require 'pathname'
-
 module Avsh
   # Finds full path for the Vagrantfile to use
   class VagrantfileFinder
@@ -11,14 +9,15 @@ module Avsh
     # Based off https://github.com/mitchellh/vagrant/blob/646414b347d4694de24693d226c35e42a88dea0e/lib/vagrant/environment.rb#L693
     def find(host_directory)
       start_directory = @vagrant_cwd || host_directory
-      cur_directory = Pathname.new(start_directory)
+      cur_directory = start_directory
+      filenames = filenames_to_check
       loop do
-        filenames_to_check.each do |filename|
-          path = cur_directory.join(filename)
-          return path.to_s if path.readable?
+        filenames.each do |filename|
+          path = File.join(cur_directory, filename)
+          return path if File.readable?(path)
         end
-        break if cur_directory.root? || cur_directory.nil?
-        cur_directory = cur_directory.parent
+        break if File.dirname(cur_directory) == cur_directory
+        cur_directory = File.dirname(cur_directory)
       end
 
       # Nothing found
