@@ -7,9 +7,11 @@ RuboCop::RakeTask.new
 
 RSpec::Core::RakeTask.new(:spec)
 
-task default: :spec
+task default: [:spec, :rubocop, :script]
 
+desc 'Generates single-file script for avsh'
 task :script do
+  puts 'Generating avsh script'
   avsh_libs = Dir['lib/avsh/*.rb'].map { |file| File.read(file) }.join("\n")
   template = File.read('avsh_singlefile_template.tpl')
   script = template % { avsh_version: Avsh::VERSION, avsh_libs: avsh_libs }
