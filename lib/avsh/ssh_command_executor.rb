@@ -20,7 +20,7 @@ module Avsh
         ssh_command.push('-t') # force TTY allocation
       end
       command = "cd #{guest_directory}; #{command}" if guest_directory
-      ssh_command.push(@machine_name, "cd #{guest_directory}; #{command}")
+      ssh_command.push(@machine_name, command)
 
       @logger.debug "Executing '#{ssh_command}'"
 
