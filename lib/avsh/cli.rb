@@ -13,12 +13,12 @@ module Avsh
 
     def self.run
       # May exit here if "--help" or "--version" supplied
-      args = ArgumentParser.parse(ARGV)
+      command, options = ArgumentParser.new.parse(ARGV)
 
-      new(ENV).execute_command(Dir.pwd, args[:command], args[:options])
+      new(ENV).execute_command(Dir.pwd, command, options)
     rescue Avsh::Error => e
       STDERR.puts(e.message)
-      STDERR.puts(e.backtrace.join("\n")) if args && args[:options][:debug]
+      STDERR.puts(e.backtrace.join("\n")) if args && options[:debug]
       exit 1
     end
 
