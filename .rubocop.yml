@@ -8,4 +8,4 @@ AllCops:
     - 'lib/**'
 
 Metrics/MethodLength:
-  Max: 20
+  Max: 15
