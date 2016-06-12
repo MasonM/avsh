@@ -1,3 +1,4 @@
 *.gem
 /avsh
 *.swp
+/coverage
