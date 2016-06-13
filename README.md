@@ -1,9 +1,9 @@
 # Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh)
 
-avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant
-ssh`, but is much faster and more convenient when working on synced projects. It
-automatically sets up SSH multiplexing the first time it's run, eliminating SSH
-connection overhead on subsequent invocations.
+avsh ("Augmented Vagrant sSH") is a standalone script that can be used in lieu
+of `vagrant ssh`, with greatly increased performance and extra features for
+working on synced projects. It automatically sets up SSH multiplexing the first
+time it's run, eliminating SSH connection overhead on subsequent invocations.
 
 ```sh
 $ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- vagrant ssh -c 'hostname'
@@ -16,7 +16,7 @@ vagrant-ubuntu-trusty-64
 WALL TIME=0.08s CPU=51%
 ```
 
-Also, it detects when you're working in a synced folder, avsh automatically
+Also, avsh detects when you're working in a synced folder, and automatically
 switches to the corresponding directory on the guest before executing commands
 or starting a login shell.
 
@@ -43,8 +43,6 @@ performance goals, so it might not work (or be appropriate) for your setup.
 * The host must be Linux with OpenSSH 5.6+ or OS X 10.7+. It'll probably work on
   other Unices, but hasn't been tested. No limitations on the guest.
 * No merging of multiple Vagrantfiles.
-* SSH connection details are cached, and must be manually cleared with
-  `avsh --reconnect` if the SSH configuration is changed.
 
 ## Installation
 
