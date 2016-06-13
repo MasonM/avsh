@@ -11,7 +11,11 @@ module Avsh
       start_directory = @vagrant_cwd || host_directory
       cur_directory = start_directory
       filenames = filenames_to_check
-      loop do
+
+      # Traverse up directory tree, checking each directory to see if it
+      # contains a Vagrantfile. Stop after 1000 directories as that almost
+      # certainly means there's an infinite loop bug.
+      1000.times do
         filenames.each do |filename|
           path = File.join(cur_directory, filename)
           return path if File.readable?(path)
