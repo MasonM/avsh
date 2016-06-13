@@ -22,7 +22,7 @@ module Avsh
       end
 
       # If the command was supplied via "-c" (as with Vagrant SSH), switch to
-      # Vagrant SSH compatibility mode
+      # 'vagrant ssh' compatibility mode
       if @options[:command]
         vagrant_ssh_compatibility_mode(remaining_args)
       else

@@ -55,7 +55,7 @@ module Avsh
                         @vagrant_config.first_machine
       @logger.debug('Couldn\'t find guest directory for ' \
         "'#{host_directory}', falling back to #{default_machine} for " \
-        'the machine and nothing for guest directory (i.e. the vagrant home)')
+        'the machine and nothing for guest directory')
       [default_machine, nil]
     end
 
