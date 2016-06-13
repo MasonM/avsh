@@ -1,5 +1,16 @@
 require 'spec_helper'
 
+shared_examples 'displays output and exits' do |args, expected_output|
+  it do
+    expect { subject.parse(args) }.to output(expected_output).to_stdout
+      .and raise_error(SystemExit)
+  end
+end
+
+shared_examples 'raises exception' do |args, exception|
+  it { expect { subject.parse(args) }.to raise_error(exception) }
+end
+
 describe Avsh::ArgumentParser do
   context 'with empty argv' do
     it 'returns defaults' do
@@ -15,25 +26,16 @@ describe Avsh::ArgumentParser do
   end
 
   context 'with invalid option' do
-    it 'displays help and exits' do
-      expect { subject.parse(['-foobar']) }
-        .to output(/^Usage: avsh/).to_stdout.and raise_error(SystemExit)
-    end
+    it_behaves_like 'displays output and exits', ['--foobar'], /^Usage: avsh/
   end
 
   context 'with --help' do
-    it 'displays help and exits' do
-      expect { subject.parse(['-help']) }
-        .to output(/^Usage: avsh/).to_stdout.and raise_error(SystemExit)
-    end
+    it_behaves_like 'displays output and exits', ['--help'], /^Usage: avsh/
   end
 
   context 'with --version' do
-    it 'displays version and exits' do
-      expect { subject.parse(['--version']) }
-        .to output(/^avsh v#{Avsh::VERSION}/)
-        .to_stdout.and raise_error(SystemExit)
-    end
+    it_behaves_like 'displays output and exits', ['--version'],
+                    /^avsh v#{Avsh::VERSION}/
   end
 
   context 'with reconnect' do
@@ -78,10 +80,8 @@ describe Avsh::ArgumentParser do
 
   context 'with command via -c option' do
     context 'with machine as an option' do
-      it 'raises an exception' do
-        expect { subject.parse(['-c', 'foo', '-m', 'machine1']) }
-          .to raise_error(Avsh::VagrantCompatibilityModeMachineError)
-      end
+      it_behaves_like 'raises exception', ['-c', 'foo', '-m', 'machine1'],
+                      Avsh::VagrantCompatibilityModeMachineError
     end
 
     context 'with single machine machine in place of normal command' do
@@ -98,10 +98,8 @@ describe Avsh::ArgumentParser do
     end
 
     context 'with multiple machines in place of normal command' do
-      it 'raises an exception' do
-        expect { subject.parse(['-c', 'foo', 'machine1', 'machine2']) }
-          .to raise_error(Avsh::MultipleMachinesError)
-      end
+      it_behaves_like 'raises exception', ['-c', 'foo', 'machine1', 'machine2'],
+                      Avsh::MultipleMachinesError
     end
   end
 end
