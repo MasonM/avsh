@@ -54,20 +54,15 @@ module Avsh
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
   class VagrantSshConfigError < Error
     def initialize(machine_name, command, status, stdout, stderr)
-      if !status.success?
-        super(
-          'avsh failed to determine the SSH configuration for the machine ' \
-          "'#{machine_name}'.\n" \
-          'Is the VAGRANT_CWD setting correct? ' \
-          "See README.md for details.\n\n" \
-          "Details:\n" \
-          "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
-          "Vagrant output:\n#{stdout}#{stderr}"
-        )
-      else
-        super('avsh got an unexpected error message from Vagrant while ' \
-          "running \"#{command}\": #{stderr}")
-      end
+      super(
+        'avsh failed to determine the SSH configuration for the machine ' \
+        "'#{machine_name}'.\n" \
+        'Is the VAGRANT_CWD setting correct? ' \
+        "See README.md for details.\n\n" \
+        "Details:\n" \
+        "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
+        "Vagrant output:\n#{stdout}#{stderr}"
+      )
     end
   end
 

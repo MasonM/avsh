@@ -72,7 +72,7 @@ module Avsh
         { 'VAGRANT_CWD' => @vagrantfile_dir },
         *ssh_config_command
       )
-      if !status.success? || !stderr.empty?
+      unless status.success?
         human_readable_command =
           "VAGRANT_CWD=#{@vagrantfile_dir} " + ssh_config_command.join(' ')
         raise VagrantSshConfigError.new(@machine_name, human_readable_command,
