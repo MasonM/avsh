@@ -1,9 +1,8 @@
 # Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
-of `vagrant ssh`, with greatly increased performance and extra features for
-working on synced projects. It automatically sets up SSH multiplexing the first
-time it's run, eliminating SSH connection overhead on subsequent invocations.
+of `vagrant ssh`. It provides greatly increased performance via SSH multiplexing
+and extra features for working on synced projects.
 
 ```sh
 $ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- vagrant ssh -c 'hostname'
@@ -16,9 +15,9 @@ vagrant-ubuntu-trusty-64
 WALL TIME=0.08s CPU=51%
 ```
 
-Also, avsh detects when you're working in a synced folder, and automatically
-switches to the corresponding directory on the guest before executing commands
-or starting a login shell.
+avsh detects when you're working in a synced folder, and automatically switches
+to the corresponding directory on the guest before executing commands or
+starting a login shell.
 
 ```sh
 $ echo "host=`hostname`, current directory=$PWD"
