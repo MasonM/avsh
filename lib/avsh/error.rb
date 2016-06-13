@@ -8,9 +8,9 @@ module Avsh
   # mode, and cannot be used with "-m".
   class VagrantCompatibilityModeMachineError < Error
     def initialize(options)
-      fixed_command = "avsh -m #{options[:machine]} -- #{options[:command]}"
+      fixed_command = "avsh -m #{options[:machine]} #{options[:command]}"
       super('Cannot specify both the command and machine as an option. ' \
-            'Instead, just specify machine as an option, like this:' \
+            'Instead, just specify the machine as an option, like this:' \
             "\n#{fixed_command}")
     end
   end

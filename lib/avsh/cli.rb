@@ -18,7 +18,7 @@ module Avsh
       new(ENV).execute_command(Dir.pwd, command, options)
     rescue Avsh::Error => e
       STDERR.puts(e.message)
-      STDERR.puts(e.backtrace.join("\n")) if args && options[:debug]
+      STDERR.puts(e.backtrace.join("\n")) if options && options[:debug]
       exit 1
     end
 
