@@ -11,6 +11,12 @@ shared_examples 'raises exception' do |args, exception|
   it { expect { subject.parse(args) }.to raise_error(exception) }
 end
 
+shared_examples 'sets option when arg supplied' do |args, option_hash|
+  it do
+    expect(subject.parse(args)).to include(a_collection_including(option_hash))
+  end
+end
+
 describe Avsh::ArgumentParser do
   context 'with empty argv' do
     it 'returns defaults' do
@@ -40,41 +46,25 @@ describe Avsh::ArgumentParser do
 
   context 'with reconnect' do
     ['-r', '--reconnect'].each do |opt|
-      it "sets reconnect when #{opt} supplied" do
-        expect(subject.parse([opt])).to include(
-          a_collection_including(reconnect: true)
-        )
-      end
+      it_behaves_like 'sets option when arg supplied', [opt], reconnect: true
     end
   end
 
   context 'with debug' do
     ['-d', '--debug'].each do |opt|
-      it "sets debug when #{opt} supplied" do
-        expect(subject.parse([opt])).to include(
-          a_collection_including(debug: true)
-        )
-      end
+      it_behaves_like 'sets option when arg supplied', [opt], debug: true
     end
   end
 
   context 'with machine' do
     [['-m', 'foo'], ['--machine=foo']].each do |opt|
-      it "sets machine to 'foo' when #{opt} supplied" do
-        expect(subject.parse(opt)).to include(
-          a_collection_including(machine: 'foo')
-        )
-      end
+      it_behaves_like 'sets option when arg supplied', opt, machine: 'foo'
     end
   end
 
   context 'with custom ssh args' do
     [['-s', '-6 -T'], ['--ssh-args=-6 -T']].each do |opt|
-      it "sets options[:ssh_args] properly when #{opt} supplied" do
-        expect(subject.parse(opt)).to include(
-          a_collection_including(ssh_args: '-6 -T')
-        )
-      end
+      it_behaves_like 'sets option when arg supplied', opt, ssh_args: '-6 -T'
     end
   end
 
