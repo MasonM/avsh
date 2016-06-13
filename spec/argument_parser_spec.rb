@@ -13,6 +13,13 @@ describe Avsh::ArgumentParser do
     end
   end
 
+  context 'with invalid option' do
+    it 'displays help and exits' do
+      expect { subject.parse(['-foobar']) }
+        .to output(/^Usage: avsh/).to_stdout.and raise_error(SystemExit)
+    end
+  end
+
   context 'with --help' do
     it 'displays help and exits' do
       expect { subject.parse(['-help']) }

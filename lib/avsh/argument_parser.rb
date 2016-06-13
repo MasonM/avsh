@@ -6,7 +6,12 @@ module Avsh
   class ArgumentParser
     def parse(argv)
       @options = { machine: nil, debug: false, reconnect: false, ssh_args: '' }
-      command = parser.order!(argv)
+      begin
+        command = parser.order!(argv)
+      rescue OptionParser::InvalidOption
+        puts parser
+        exit 1
+      end
       [@options, command]
     end
 
