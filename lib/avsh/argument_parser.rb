@@ -5,16 +5,9 @@ module Avsh
   # to run
   class ArgumentParser
     def parse(argv)
-      @options = { machine: nil, debug: false, reconnect: false, ssh_args: [] }
-      # Taken from https://github.com/mitchellh/vagrant/blob/07389ffc04147a25083ae88481b9ed2c7b3892d3/plugins/commands/ssh/command.rb#L28
-      # Parse out the extra args to send to SSH, which is everything after "--"
-      split_index = argv.index('--')
-      if split_index
-        @options[:ssh_args] = argv.drop(split_index + 1)
-        argv = argv.take(split_index)
-      end
-
-      [@options, parser.order!(argv)]
+      @options = { machine: nil, debug: false, reconnect: false, ssh_args: '' }
+      command = parser.order!(argv)
+      [@options, command]
     end
 
     private
@@ -22,7 +15,7 @@ module Avsh
     # rubocop:disable Metrics/MethodLength
     def parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: avsh [options] [-- ssh_options] [command]'
+        opts.banner = 'Usage: avsh [options] [--] [command]'
 
         opts.on('-m', '--machine <machine>', 'Target Vagrant machine',
                 '(if not given, will infer from Vagrantfile. See README.md ' \
@@ -32,6 +25,11 @@ module Avsh
 
         opts.on('-r', '--reconnect', 'Re-initialize SSH connection') do
           @options[:reconnect] = true
+        end
+
+        opts.on('-s', '--ssh-args <args>', 'Additional arguments to pass ' \
+                'to SSH') do |args|
+          @options[:ssh_args] = args.strip
         end
 
         opts.on('-d', '--debug', 'Enable debugging mode') do

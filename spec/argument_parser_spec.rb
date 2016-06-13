@@ -7,7 +7,7 @@ describe Avsh::ArgumentParser do
         machine: nil,
         debug: false,
         reconnect: false,
-        ssh_args: []
+        ssh_args: ''
       }
       expect(subject.parse([])).to eq([default_opts, []])
     end
@@ -59,10 +59,12 @@ describe Avsh::ArgumentParser do
   end
 
   context 'with custom ssh args' do
-    it 'sets options[:ssh_args] properly' do
-      expect(subject.parse(['--', '-T', '-6'])).to include(
-        a_collection_including(ssh_args: ['-T', '-6'])
-      )
+    [['-s', '-6 -T'], ['--ssh-args=-6 -T']].each do |opt|
+      it "sets options[:ssh_args] properly when #{opt} supplied" do
+        expect(subject.parse(opt)).to include(
+          a_collection_including(ssh_args: '-6 -T')
+        )
+      end
     end
   end
 end

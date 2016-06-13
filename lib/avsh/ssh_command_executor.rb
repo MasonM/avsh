@@ -9,7 +9,7 @@ module Avsh
       @controlmaster_path = controlmaster_path
     end
 
-    def execute(command, guest_directory = nil, user_ssh_args = [])
+    def execute(command, guest_directory = nil, user_ssh_args = '')
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'
@@ -39,6 +39,7 @@ module Avsh
         # See https://github.com/mitchellh/vagrant/blob/fc1d2c29be6b19b9ee19c063e15f72283140ec8e/lib/vagrant/action/builtin/ssh_run.rb#L47
         args << '-t'
       end
+      args += user_ssh_args.split(' ') unless user_ssh_args.empty?
       args
     end
   end

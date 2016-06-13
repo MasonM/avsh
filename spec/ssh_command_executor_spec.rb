@@ -30,4 +30,13 @@ describe Avsh::SshCommandExecutor do
       expect { subject.execute('pwd') }.to raise_error(Avsh::ExecSshError)
     end
   end
+
+  context 'with user SSH args, non-empty command and no guest dir' do
+    it 'runs command' do
+      expect(Kernel).to receive(:exec).with('ssh', '-o ControlPath /s.sock',
+                                            '-T', '-6', 'foo_machine', 'pwd')
+      expect { subject.execute('pwd', nil, '-T -6') }
+        .to raise_error(Avsh::ExecSshError)
+    end
+  end
 end
