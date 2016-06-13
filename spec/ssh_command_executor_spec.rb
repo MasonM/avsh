@@ -8,8 +8,8 @@ describe Avsh::SshCommandExecutor do
       expect(Kernel).to receive(:exec).with('ssh', '-o ControlPath /s.sock',
                                             '-t', 'foo_machine',
                                             'cd /somedir; ls')
-      expect { subject.execute('ls', '/somedir') }.to \
-        raise_error(Avsh::ExecSshError)
+      expect { subject.execute('ls', '/somedir') }
+        .to raise_error(Avsh::ExecSshError)
     end
   end
 
@@ -18,8 +18,8 @@ describe Avsh::SshCommandExecutor do
       expect(Kernel).to receive(:exec).with('ssh', '-o ControlPath /s.sock',
                                             '-t', 'foo_machine',
                                             'cd /somedir; exec $SHELL -l')
-      expect { subject.execute('', '/somedir') }.to \
-        raise_error(Avsh::ExecSshError)
+      expect { subject.execute('', '/somedir') }
+        .to raise_error(Avsh::ExecSshError)
     end
   end
 

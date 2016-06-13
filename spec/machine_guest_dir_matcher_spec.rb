@@ -11,8 +11,8 @@ describe Avsh::MachineGuestDirMatcher do
     it 'raises exception' do
       allow(@stub_config).to receive(:collect_folders_by_machine)
       allow(@stub_config).to receive(:machine?).with('foo').and_return(false)
-      expect { subject.match('/', 'foo') }.to \
-        raise_error(Avsh::MachineNotFoundError)
+      expect { subject.match('/', 'foo') }
+        .to raise_error(Avsh::MachineNotFoundError)
     end
   end
 
@@ -47,8 +47,8 @@ describe Avsh::MachineGuestDirMatcher do
           },
           machine?: true
         )
-        expect(subject.match('/foo/foo2/', 'machine2')).to eq \
-          ['machine2', '/bar2/foo2']
+        expect(subject.match('/foo/foo2/', 'machine2'))
+          .to eq ['machine2', '/bar2/foo2']
       end
     end
   end

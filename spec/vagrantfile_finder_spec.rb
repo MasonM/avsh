@@ -17,8 +17,8 @@ describe Avsh::VagrantfileFinder do
 
   context 'no Vagrantfile' do
     it 'raises an exception' do
-      expect { subject.find('/') }.to \
-        raise_error(Avsh::VagrantfileNotFoundError)
+      expect { subject.find('/') }
+        .to raise_error(Avsh::VagrantfileNotFoundError)
     end
   end
 
@@ -54,8 +54,8 @@ describe Avsh::VagrantfileFinder do
       end
 
       it 'raises an exception' do
-        expect { subject.find('/foo/bar') }.to \
-          raise_error(Avsh::VagrantfileNotFoundError)
+        expect { subject.find('/foo/bar') }
+          .to raise_error(Avsh::VagrantfileNotFoundError)
       end
     end
   end
@@ -75,8 +75,8 @@ describe Avsh::VagrantfileFinder do
       before { FileUtils.touch('/Vagrantfile') }
 
       it 'raises an exception' do
-        expect { subject.find('/') }.to \
-          raise_error(Avsh::VagrantfileNotFoundError)
+        expect { subject.find('/') }
+          .to raise_error(Avsh::VagrantfileNotFoundError)
       end
     end
   end

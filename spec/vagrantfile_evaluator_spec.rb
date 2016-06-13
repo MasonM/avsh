@@ -25,8 +25,8 @@ describe Avsh::VagrantfileEvaluator do
     it 'raises an exception' do
       allow(@environment).to receive(:prep_vagrant_configure)
 
-      expect { subject.evaluate('/foo') }.to \
-        raise_error(Avsh::VagrantfileEvalError)
+      expect { subject.evaluate('/foo') }
+        .to raise_error(Avsh::VagrantfileEvalError)
     end
   end
 
@@ -37,8 +37,8 @@ describe Avsh::VagrantfileEvaluator do
       allow(@environment).to receive(:prep_vagrant_configure)
       allow(@environment).to receive(:module_eval).and_raise(SyntaxError.new)
 
-      expect { subject.evaluate('/foo') }.to \
-        raise_error(Avsh::VagrantfileEvalError)
+      expect { subject.evaluate('/foo') }
+        .to raise_error(Avsh::VagrantfileEvalError)
     end
   end
 end

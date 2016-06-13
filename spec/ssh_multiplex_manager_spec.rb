@@ -13,8 +13,8 @@ describe Avsh::SshMultiplexManager do
         stub_status = double('status', success?: false, exitstatus: 2)
         expect(Open3).to receive(:capture3).and_return(['', '', stub_status])
 
-        expect { subject.initialize_socket_if_needed }.to \
-          raise_error(Avsh::VagrantSshConfigError)
+        expect { subject.initialize_socket_if_needed }
+          .to raise_error(Avsh::VagrantSshConfigError)
       end
     end
 
@@ -28,8 +28,8 @@ describe Avsh::SshMultiplexManager do
             .and_yield(double('stdin', closed?: true), double('stdout'),
                        double('stderr', read: 'foo'), double('wait_thr'))
 
-          expect { subject.initialize_socket_if_needed }.to \
-            raise_error(Avsh::SshMasterSocketError)
+          expect { subject.initialize_socket_if_needed }
+            .to raise_error(Avsh::SshMasterSocketError)
         end
       end
 

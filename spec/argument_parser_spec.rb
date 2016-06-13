@@ -3,22 +3,28 @@ require 'spec_helper'
 describe Avsh::ArgumentParser do
   context 'with empty argv' do
     it 'returns defaults' do
-      expect(subject.parse([])).to \
-        eq([{ machine: nil, debug: false, reconnect: false, ssh_args: [] }, []])
+      default_opts = {
+        machine: nil,
+        debug: false,
+        reconnect: false,
+        ssh_args: []
+      }
+      expect(subject.parse([])).to eq([default_opts, []])
     end
   end
 
   context 'with --help' do
     it 'displays help and exits' do
-      expect { subject.parse(['-help']) }.to \
-        output(/^Usage: avsh/).to_stdout.and raise_error(SystemExit)
+      expect { subject.parse(['-help']) }
+        .to output(/^Usage: avsh/).to_stdout.and raise_error(SystemExit)
     end
   end
 
   context 'with --version' do
     it 'displays version and exits' do
-      expect { subject.parse(['--version']) }.to \
-        output(/^avsh v#{Avsh::VERSION}/).to_stdout.and raise_error(SystemExit)
+      expect { subject.parse(['--version']) }
+        .to output(/^avsh v#{Avsh::VERSION}/)
+        .to_stdout.and raise_error(SystemExit)
     end
   end
 

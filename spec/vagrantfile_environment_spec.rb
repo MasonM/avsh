@@ -4,8 +4,8 @@ describe Avsh::VagrantfileEnvironment do
   context 'prepping Vagrant module' do
     it 'correctly sets dummy Configure object' do
       dummy_configure = described_class.prep_vagrant_configure
-      expect(described_class::Vagrant.class_variable_get(:@@configure)).to eq \
-        dummy_configure
+      expect(described_class::Vagrant.class_variable_get(:@@configure))
+        .to eq dummy_configure
     end
   end
 
@@ -35,8 +35,8 @@ describe Avsh::VagrantfileEnvironment do
 
     context 'with simple Vagrantfile' do
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config(stubbed_parsed_config)).to eq \
-          stubbed_parsed_config.new({}, {}, nil)
+        expect(subject.parsed_config(stubbed_parsed_config))
+          .to eq stubbed_parsed_config.new({}, {}, nil)
       end
     end
 
@@ -53,8 +53,8 @@ describe Avsh::VagrantfileEnvironment do
       end
 
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config(stubbed_parsed_config)).to eq \
-          stubbed_parsed_config.new(
+        expect(subject.parsed_config(stubbed_parsed_config))
+          .to eq stubbed_parsed_config.new(
             { '/foo' => '/bar' },
             {
               'machine1' => {},
