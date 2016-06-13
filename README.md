@@ -1,4 +1,4 @@
-# Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh.svg)](https://codeclimate.com/github/MasonM/avsh)
+# Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant
 ssh`, but is much faster and more convenient when working on synced projects. It
