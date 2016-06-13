@@ -1,4 +1,4 @@
-# Overview
+# Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh.svg)](https://codeclimate.com/github/MasonM/avsh)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that emulates `vagrant
 ssh`, but is much faster and more convenient when working on synced projects. It
@@ -31,7 +31,7 @@ $ avsh 'grep synced_folder /vagrant/Vagrantfile'
   config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
 ```
 
-# Caveats
+## Caveats
 
 avsh makes a number of assumptions and shortcuts in order to achieve its
 performance goals, so it might not work (or be appropriate) for your setup.
@@ -46,7 +46,7 @@ performance goals, so it might not work (or be appropriate) for your setup.
 * SSH connection details are cached, and must be manually cleared with
   `avsh --reconnect` if the SSH configuration is changed.
 
-# Installation
+## Installation
 
 Put this script somewhere convenient, and optionally add an alias:
 ```sh
@@ -59,7 +59,7 @@ avsh uses the same `VAGRANT_CWD` environment variable that Vagrant uses to
 determine the directory containing the Vagrantfile, defaulting to the current
 directory.
 
-# Usage
+## Usage
 
 Run `avsh <command>` to execute a command in the guest machine, or just `avsh`
 for a login shell. If you're in a synced folder, it will change to the
@@ -72,7 +72,7 @@ none are found to match, it will use the primary machine if one exists, else it
 uses the first defined machine. You can use the `avsh -m <machine_name>` to
 explicitly specify the machine you'd like to connect to.
 
-# Why not make this a Vagrant plugin?
+## Why not make this a Vagrant plugin?
 
 Because I couldn't get this to work as a plugin without sacrificing performance.
 The overhead of just getting to the point of executing a command in a plugin is
