@@ -13,7 +13,7 @@ module Avsh
 
     def self.run
       # May exit here if "--help" or "--version" supplied
-      command, options = ArgumentParser.new.parse(ARGV)
+      options, command = ArgumentParser.new.parse(ARGV)
 
       new(ENV).execute_command(Dir.pwd, command, options)
     rescue Avsh::Error => e
@@ -25,6 +25,7 @@ module Avsh
     # rubocop:disable Metrics/AbcSize
     def execute_command(host_directory, command, options)
       logger = DebugLogger.new(options[:debug])
+      logger.debug "Executing command '#{command}' with options '#{options}'"
 
       finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
       vagrantfile_path = finder.find(host_directory)

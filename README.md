@@ -16,7 +16,7 @@ vagrant-ubuntu-trusty-64
 WALL TIME=0.08s CPU=51%
 ```
 
-Also, it detects when you're working in a synced folder, and automatically
+Also, it detects when you're working in a synced folder, avsh automatically
 switches to the corresponding directory on the guest before executing commands
 or starting a login shell.
 
@@ -36,12 +36,12 @@ $ avsh 'grep synced_folder /vagrant/Vagrantfile'
 avsh makes a number of assumptions and shortcuts in order to achieve its
 performance goals, so it might not work (or be appropriate) for your setup.
 
-* Vagrantfiles are evaluated inside a fake Vagrant environment, which may cause
-  issues with complex Vagrantfiles that have conditional logic using Vagrant's
-  API. Specifically, the `Vagrant.has_plugin?` method always returns true, and
-  other methods on the `Vagrant` module are stubbed out.
-* The host must be Linux or OS X 10.7+. It'll probably work on other Unices, but
-  hasn't been tested. No limitations on the guest.
+* Vagrantfiles are evaluated inside [a fake Vagrant environment](https://github.com/MasonM/avsh/blob/master/lib/avsh/vagrantfile_environment.rb),
+  which may cause issues with complex Vagrantfiles that have conditional logic
+  using Vagrant's API. Specifically, the `Vagrant.has_plugin?` method always
+  returns true, and other methods on the `Vagrant` module are stubbed out.
+* The host must be Linux with OpenSSH 5.6+ or OS X 10.7+. It'll probably work on
+  other Unices, but hasn't been tested. No limitations on the guest.
 * No merging of multiple Vagrantfiles.
 * SSH connection details are cached, and must be manually cleared with
   `avsh --reconnect` if the SSH configuration is changed.

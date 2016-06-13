@@ -2,8 +2,8 @@ module Avsh
   # Finds full path for the Vagrantfile to use
   class VagrantfileFinder
     def initialize(vagrant_cwd = nil, vagrantfile_name = nil)
-      @vagrant_cwd = vagrant_cwd
-      @vagrantfile_name = vagrantfile_name
+      @vagrant_cwd = File.expand_path(vagrant_cwd) if vagrant_cwd
+      @vagrantfile_name = File.expand_path(vagrantfile_name) if vagrantfile_name
     end
 
     # Based off https://github.com/mitchellh/vagrant/blob/646414b347d4694de24693d226c35e42a88dea0e/lib/vagrant/environment.rb#L693
