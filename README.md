@@ -1,6 +1,6 @@
 # Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh)
 
-avsh ("Augmented Vagrant sSH") is a standalone script that can be used in lieu
+avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
 of `vagrant ssh`, with greatly increased performance and extra features for
 working on synced projects. It automatically sets up SSH multiplexing the first
 time it's run, eliminating SSH connection overhead on subsequent invocations.

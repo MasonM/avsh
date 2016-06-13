@@ -3,6 +3,25 @@ module Avsh
   class Error < StandardError
   end
 
+  # Indicates user supplied the "-c" (or "--command") and "-m" (or "--machine")
+  # command at the same time. The "-c" option triggers Vagrant SSH compatibility
+  # mode, and cannot be used with "-m".
+  class VagrantCompatibilityModeMachineError < Error
+    def initialize(options)
+      fixed_command = "avsh -m #{options[:machine]} -- #{options[:command]}"
+      super('Cannot specify both the command and machine as an option. ' \
+            'Instead, just specify machine as an option, like this:' \
+            "\n#{fixed_command}")
+    end
+  end
+
+  # Indicates user tried to specify multiple machines to run against
+  class MultipleMachinesError < Error
+    def initialize
+      super('Cannot specify multiple machines to execute the command against.')
+    end
+  end
+
   # Indicates failure to eval() a Vagrantfile
   class VagrantfileEvalError < Error
     def initialize(vagrantfile_path, e)

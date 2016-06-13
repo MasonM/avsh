@@ -4,25 +4,48 @@ module Avsh
   # Handles parsing ARGV to extract avsh options, ssh arguments, and the command
   # to run
   class ArgumentParser
+    # rubocop:disable Metrics/MethodLength
     def parse(argv)
-      @options = { machine: nil, debug: false, reconnect: false, ssh_args: '' }
+      @options = {
+        machine: nil,
+        debug: false,
+        reconnect: false,
+        ssh_args: '',
+        command: nil
+      }
+
       begin
-        command = parser.order!(argv)
+        remaining_args = parser.order!(argv)
       rescue OptionParser::InvalidOption
         puts parser
         exit 1
       end
-      [@options, command]
+
+      # If the command was supplied via "-c" (as with Vagrant SSH), switch to
+      # Vagrant SSH compatibility mode
+      if @options[:command]
+        vagrant_ssh_compatibility_mode(remaining_args)
+      else
+        [@options, remaining_args.join(' ')]
+      end
     end
+    # rubocop:enable all
 
     private
 
-    # rubocop:disable Metrics/MethodLength
+    def vagrant_ssh_compatibility_mode(remaining_args)
+      raise VagrantCompatibilityModeMachineError, @options if @options[:machine]
+      raise MultipleMachinesError if remaining_args.length > 1
+      @options[:machine] = remaining_args[0]
+      [@options, @options[:command]]
+    end
+
+    # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
     def parser
       OptionParser.new do |opts|
         opts.banner = 'Usage: avsh [options] [--] [command]'
 
-        opts.on('-m', '--machine <machine>', 'Target Vagrant machine',
+        opts.on('-m', '--machine MACHINE', 'Target Vagrant machine',
                 '(if not given, will infer from Vagrantfile. See README.md ' \
                 'for details.') do |machine|
           @options[:machine] = machine.strip
@@ -32,7 +55,7 @@ module Avsh
           @options[:reconnect] = true
         end
 
-        opts.on('-s', '--ssh-args <args>', 'Additional arguments to pass ' \
+        opts.on('-s', '--ssh-args ARGS', 'Additional arguments to pass ' \
                 'to SSH') do |args|
           @options[:ssh_args] = args.strip
         end
@@ -49,6 +72,11 @@ module Avsh
         opts.on('-h', '--help', 'Displays help') do
           puts opts.help
           exit
+        end
+
+        opts.on('-c', '--command COMMAND', 'Command to execute (only for ' \
+                'compatibility with Vagrant SSH)') do |cmd|
+          @options[:command] = cmd
         end
       end
     end
