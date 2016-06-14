@@ -14,6 +14,8 @@ module Avsh
     # Dummy Vagrant module that stubs out everything except what's needed to
     # extract config details.
     module Vagrant
+      VERSION = '1.8.3'.freeze
+
       # rubocop:disable Style/PredicateName
       def self.has_plugin?(*)
         # Just lie and say we have the plugin, because a Vagrantfile that calls
