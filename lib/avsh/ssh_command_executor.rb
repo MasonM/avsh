@@ -1,5 +1,3 @@
-require 'open3'
-
 module Avsh
   # Executes a command on a machine using multiplex SSH
   class SshCommandExecutor

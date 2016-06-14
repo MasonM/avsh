@@ -1,5 +1,3 @@
-require 'optparse'
-
 module Avsh
   # Point of entry for avsh. Extracts environment variables, parses arguments,
   # and hooks everything up in execute_command()
