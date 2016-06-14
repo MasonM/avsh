@@ -55,10 +55,10 @@ module Avsh
         @machine_name
       ]
       @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
-      stdout, stderr, status = Open3.capture3(*ssh_cmd)
+      stdout_and_stderr, status = Open3.capture2e(*ssh_cmd)
       unless status.success?
-        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), status, stderr,
-                                         stdout)
+        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), status,
+                                         stdout_and_stderr)
       end
     end
 
@@ -68,7 +68,7 @@ module Avsh
       ssh_config_command = ['vagrant', 'ssh-config', @machine_name]
       @logger.debug('Executing vagrant ssh-config command: ' +
                     ssh_config_command.to_s)
-      stdout, stderr, status = Open3.capture3(
+      stdout_and_stderr, status = Open3.capture2e(
         { 'VAGRANT_CWD' => @vagrantfile_dir },
         *ssh_config_command
       )
@@ -76,10 +76,10 @@ module Avsh
         human_readable_command =
           "VAGRANT_CWD=#{@vagrantfile_dir} " + ssh_config_command.join(' ')
         raise VagrantSshConfigError.new(@machine_name, human_readable_command,
-                                        status, stderr, stdout)
+                                        status, stdout_and_stderr)
       end
-      @logger.debug "Got SSH config for #{@machine_name}: #{stdout}"
-      stdout
+      @logger.debug "Got SSH config for #{@machine_name}: #{stdout_and_stderr}"
+      stdout_and_stderr
     end
 
     # This is mostly based off

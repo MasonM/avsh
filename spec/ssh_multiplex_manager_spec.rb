@@ -11,7 +11,7 @@ describe Avsh::SshMultiplexManager do
     context 'fails to read vagrant-ssh-config' do
       it 'raises exception' do
         stub_status = double('status', success?: false, exitstatus: 2)
-        expect(Open3).to receive(:capture3).and_return(['', '', stub_status])
+        expect(Open3).to receive(:capture2e).and_return(['', stub_status])
 
         expect { subject.initialize_socket_if_needed }
           .to raise_error(Avsh::VagrantSshConfigError)
@@ -21,8 +21,8 @@ describe Avsh::SshMultiplexManager do
     context 'successfully reads vagrant-ssh-config' do
       context 'fails to execute ssh' do
         it 'raises exception' do
-          expect(Open3).to receive(:capture3)
-            .and_return(['', '', double('status', success?: true)])
+          expect(Open3).to receive(:capture2e)
+            .and_return(['', double('status', success?: true)])
 
           expect(Open3).to receive(:popen3)
             .and_yield(double('stdin', closed?: true), double('stdout'),
@@ -35,9 +35,9 @@ describe Avsh::SshMultiplexManager do
 
       context 'successfully executes ssh' do
         it 'initializes socket' do
-          expect(Open3).to receive(:capture3)
+          expect(Open3).to receive(:capture2e)
             .with({ 'VAGRANT_CWD' => '/' }, 'vagrant', 'ssh-config', 'machine1')
-            .and_return(['vagrant_out', '', double('status', success?: true)])
+            .and_return(['vagrant_out', double('status', success?: true)])
 
           mock_stdin = double('stdin', closed?: false, close: true)
           expect(mock_stdin).to receive(:puts).with('vagrant_out')
@@ -64,8 +64,8 @@ describe Avsh::SshMultiplexManager do
 
     context 'fails to close socket' do
       it 'raises an exception' do
-        expect(Open3).to receive(:capture3)
-          .and_return(['', '', double('status', success?: false)])
+        expect(Open3).to receive(:capture2e)
+          .and_return(['', double('status', success?: false)])
         expect { subject.initialize_socket_if_needed(true) }
           .to raise_error(Avsh::SshMultiplexCloseError)
       end
@@ -73,17 +73,17 @@ describe Avsh::SshMultiplexManager do
 
     context 'successfully closes socket' do
       it 'initializes new socket' do
-        stub_capture3_return = ['', '', double('status', success?: true)]
+        stub_capture2e_return = ['', double('status', success?: true)]
 
-        expect(Open3).to receive(:capture3)
+        expect(Open3).to receive(:capture2e)
           .with('ssh', '-O', 'exit',
                 '-o ControlPath /foo/tmp/avsh_machine1_controlmaster.sock',
                 'machine1')
-          .and_return(stub_capture3_return)
+          .and_return(stub_capture2e_return)
 
-        expect(Open3).to receive(:capture3)
+        expect(Open3).to receive(:capture2e)
           .with({ 'VAGRANT_CWD' => '/' }, 'vagrant', 'ssh-config', 'machine1')
-          .and_return(stub_capture3_return)
+          .and_return(stub_capture2e_return)
 
         subject.initialize_socket_if_needed(true)
       end
@@ -94,9 +94,9 @@ describe Avsh::SshMultiplexManager do
     before { allow(File).to receive(:socket?).and_return(false) }
 
     it 'initializes new socket' do
-      expect(Open3).to receive(:capture3)
+      expect(Open3).to receive(:capture2e)
         .with({ 'VAGRANT_CWD' => '/' }, 'vagrant', 'ssh-config', 'machine1')
-        .and_return(['', '', double('status', success?: true)])
+        .and_return(['', double('status', success?: true)])
 
       subject.initialize_socket_if_needed(true)
     end

@@ -61,27 +61,38 @@ module Avsh
 
   # Indicates failure to close a multiplexed connection
   class SshMultiplexCloseError < Error
-    def initialize(command, status, stdout, stderr)
+    def initialize(command, status, stdout_and_stderr)
       super(
         'avsh got an error while trying to close the SSH connection with the ' \
         "the command '#{command}'\nStatus: #{status}\n" \
-        "Output: #{stdout}#{stderr}"
+        "Output: #{stdout_and_stderr}"
       )
     end
   end
 
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
   class VagrantSshConfigError < Error
-    def initialize(machine_name, command, status, stdout, stderr)
-      super(
-        'avsh failed to determine the SSH configuration for the machine ' \
-        "'#{machine_name}'.\n" \
-        'Is the VAGRANT_CWD setting correct? ' \
-        "See README.md for details.\n\n" \
-        "Details:\n" \
-        "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
-        "Vagrant output:\n#{stdout}#{stderr}"
-      )
+    def initialize(machine_name, command, status, stdout_and_stderr)
+      if stdout_and_stderr.include?('not yet ready for SSH')
+        # Check if Vagrant says the VM is not ready, as that's the most common
+        # case. This won't work in non-English locales, since the exact error
+        # message is locale-specific. It'd be possible to have it work in other
+        # locales by passing the '--machine-readable' flag to 'vagrant
+        # ssh-config' and checking for 'Vagrant::Errors::SSHNotReady' in the
+        # output, but '--machine-readable' is an experimental feature that's
+        # subject to change according to https://www.vagrantup.com/docs/cli/machine-readable.html
+        super(stdout_and_stderr)
+      else
+        super(
+          'avsh failed to determine the SSH configuration for the machine ' \
+          "'#{machine_name}'.\n" \
+          'Is the VAGRANT_CWD setting correct? ' \
+          "See README.md for details.\n\n" \
+          "Details:\n" \
+          "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
+          "Vagrant output:\n#{stdout_and_stderr}"
+        )
+      end
     end
   end
 
