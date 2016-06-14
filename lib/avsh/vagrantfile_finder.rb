@@ -2,13 +2,13 @@ module Avsh
   # Finds full path for the Vagrantfile to use
   class VagrantfileFinder
     def initialize(vagrant_cwd = nil, vagrantfile_name = nil)
-      @vagrant_cwd = File.expand_path(vagrant_cwd) if vagrant_cwd
-      @vagrantfile_name = File.expand_path(vagrantfile_name) if vagrantfile_name
+      @vagrant_cwd = vagrant_cwd
+      @vagrantfile_name = vagrantfile_name
     end
 
     # Based off https://github.com/mitchellh/vagrant/blob/646414b347d4694de24693d226c35e42a88dea0e/lib/vagrant/environment.rb#L693
     def find(host_directory)
-      start_directory = @vagrant_cwd || host_directory
+      start_directory = File.expand_path(@vagrant_cwd || host_directory)
       cur_directory = start_directory
       filenames = filenames_to_check
 
@@ -32,7 +32,7 @@ module Avsh
 
     def filenames_to_check
       if @vagrantfile_name
-        [@vagrantfile_name]
+        [File.expand_path(@vagrantfile_name)]
       else
         # Defaults. Vagrant allows the Vagrantfile to be stored as
         # "vagrantfile", so we have to check for both.
