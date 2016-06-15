@@ -1,16 +1,16 @@
 require 'spec_helper'
 
 describe Avsh::MachineGuestDirMatcher do
-  before { @stub_config = double(Avsh::ParsedConfig) }
+  let(:stub_config) { double(Avsh::ParsedConfig) }
 
   subject do
-    described_class.new(double(debug: nil), '/foo/Vagrantfile', @stub_config)
+    described_class.new(double(debug: nil), '/foo/Vagrantfile', stub_config)
   end
 
   context 'with non-existent desired machine' do
     it 'raises exception' do
-      allow(@stub_config).to receive(:collect_folders_by_machine)
-      allow(@stub_config).to receive(:machine?).with('foo').and_return(false)
+      allow(stub_config).to receive(:collect_folders_by_machine)
+      allow(stub_config).to receive(:machine?).with('foo').and_return(false)
       expect { subject.match('/', 'foo') }
         .to raise_error(Avsh::MachineNotFoundError)
     end
@@ -19,7 +19,7 @@ describe Avsh::MachineGuestDirMatcher do
   context 'with desired machine' do
     context 'without synced folders' do
       it 'uses the desired machine' do
-        allow(@stub_config).to receive_messages(
+        allow(stub_config).to receive_messages(
           collect_folders_by_machine: {},
           machine?: true
         )
@@ -29,7 +29,7 @@ describe Avsh::MachineGuestDirMatcher do
 
     context 'no matching synced folders' do
       it 'uses the desired machine' do
-        allow(@stub_config).to receive_messages(
+        allow(stub_config).to receive_messages(
           collect_folders_by_machine: { machine1: { '/foo' => '/bar' } },
           machine?: true
         )
@@ -39,7 +39,7 @@ describe Avsh::MachineGuestDirMatcher do
 
     context 'multiple inexact matching synced folders' do
       it 'uses the desired machine and first matching guest dir' do
-        allow(@stub_config).to receive_messages(
+        allow(stub_config).to receive_messages(
           collect_folders_by_machine: {
             'machine1' => { '/foo' => '/bar' },
             'machine2' => { '/bam' => '/baz', '/foo' => '/bar2' },
@@ -56,7 +56,7 @@ describe Avsh::MachineGuestDirMatcher do
   context 'without desired machine' do
     context 'without synced folders' do
       it 'uses the primary machine if it exists' do
-        allow(@stub_config).to receive_messages(
+        allow(stub_config).to receive_messages(
           collect_folders_by_machine: {},
           primary_machine: 'machine1'
         )
@@ -64,7 +64,7 @@ describe Avsh::MachineGuestDirMatcher do
       end
 
       it 'uses the first machine if no primary machine exists' do
-        allow(@stub_config).to receive_messages(
+        allow(stub_config).to receive_messages(
           collect_folders_by_machine: {},
           primary_machine: nil,
           first_machine: 'machine2'
@@ -76,7 +76,7 @@ describe Avsh::MachineGuestDirMatcher do
 
   context 'exact match for a synced folder' do
     it 'uses the guest dir' do
-      allow(@stub_config).to receive_messages(
+      allow(stub_config).to receive_messages(
         collect_folders_by_machine: { 'machine1' => { '/bam' => '/baz' } }
       )
       expect(subject.match('/bam/')).to eq ['machine1', '/baz/']
@@ -85,7 +85,7 @@ describe Avsh::MachineGuestDirMatcher do
 
   context 'multiple inexact matching synced folders' do
     it 'uses the first matching machine and guest dir' do
-      allow(@stub_config).to receive_messages(
+      allow(stub_config).to receive_messages(
         collect_folders_by_machine: {
           'machine1' => { '/bam' => '/baz' },
           'machine2' => { '/baz' => '/baz2', '/foo' => '/bar2' },
