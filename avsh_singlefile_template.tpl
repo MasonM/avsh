@@ -19,7 +19,9 @@ for possible_ruby in "/opt/vagrant/embedded/bin/ruby" "/Applications/Vagrant/emb
   if command -v "$possible_ruby" > /dev/null 2>&1; then
     # The -x flag tells Ruby to ignore everything up to the "#!ruby"
     # The --disable-gems flag is for performance, since we don't need any gems
-    exec "$possible_ruby" -x --disable-gems -- "$0" "$@"
+    # The --disable-rubyopt flag is to prevent the RUBOPT environment variable
+    # from interfering with this script.
+    exec "$possible_ruby" -x --disable-gems --disable-rubyopt -- "$0" "$@"
   fi
 done
 
