@@ -11,6 +11,9 @@ module Avsh
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'
+      else
+        # Set process name to the command so it appears as the window/tab title
+        $PROGRAM_NAME = command
       end
 
       if guest_directory
