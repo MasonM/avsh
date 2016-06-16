@@ -56,7 +56,7 @@ module Avsh
         end
 
         opts.on('-s', '--ssh-args ARGS', 'Additional arguments to pass ' \
-                'to SSH') do |args|
+                'to SSH, e.g. "-a -6"') do |args|
           @options[:ssh_args] = args.strip
         end
 

@@ -61,12 +61,12 @@ directory.
 Run `avsh <command>` to execute a command in the guest machine, or just `avsh`
 for a login shell. If you're in a synced folder, it will change to the
 corresponding directory on the guest before running the command or starting the
-shell. Otherwise, it changes to `/vagrant`.
+shell.
 
-For multi-machine environments, avsh will infer the machine to connect to by
-matching the current directory with the synced folders in your Vagrantfile. If
-none are found to match, it will use the primary machine if one exists, else it
-uses the first defined machine. You can use the `avsh -m <machine_name>` to
+For multi-machine environments, avsh will infer the machine to connect to using
+the synced folders in your Vagrantfile. If none are found to match the current
+directory, it will use the primary machine if one exists, else it falls back to
+the first defined machine. You can use the `avsh -m <machine_name>` to
 explicitly specify the machine you'd like to connect to.
 
 ## Why not make this a Vagrant plugin?
