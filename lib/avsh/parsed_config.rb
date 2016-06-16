@@ -21,14 +21,15 @@ module Avsh
 
     def collect_folders_by_machine
       if @machine_synced_folders.empty?
-        folders = { 'default' => merge_with_defaults({}) }
+        { 'default' => merge_with_defaults({}) }
       else
-        folders = {}
-        @machine_synced_folders.each do |name, synced_folders|
-          folders[name] = merge_with_defaults(synced_folders)
+        folders = @machine_synced_folders.map do |name, synced_folders|
+          [name, merge_with_defaults(synced_folders)]
         end
+        # Sort the primary machine to the top, since it should be matched first
+        folders.sort_by! { |f| @primary_machine <=> f[0] } if @primary_machine
+        Hash[folders]
       end
-      folders
     end
 
     private

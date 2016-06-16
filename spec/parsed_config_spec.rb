@@ -63,21 +63,23 @@ describe Avsh::ParsedConfig do
     end
 
     it 'returns synced folder mappings in collect_folders_by_machine' do
-      expect(subject.collect_folders_by_machine).to eq(
-        'first' => {
+      # call to_a on the hash because we want to ensure 'primary' is ordered to
+      # the top, and the normal hash comparisons don't respect order
+      expect(subject.collect_folders_by_machine.to_a).to eq [
+        ['primary', {
+          '/default' => '/foo/',
+          '.' => '/vagrant'
+        }],
+        ['first', {
           '/default' => '/foo/',
           '.' => '/vagrant',
           '/foo' => '/bar'
-        },
-        'primary' => {
-          '/default' => '/foo/',
-          '.' => '/vagrant'
-        },
-        'overrides_defaults' => {
+        }],
+        ['overrides_defaults', {
           '/default' => '/new',
           '/foo' => '/vagrant'
-        }
-      )
+        }]
+      ]
     end
   end
 end
