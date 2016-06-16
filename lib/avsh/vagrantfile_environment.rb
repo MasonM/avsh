@@ -34,9 +34,9 @@ module Avsh
 
     # Fake Vagrant::Config module
     module FakeVagrantConfig
-      # The FakeVMConfig instance of is used to collect config details and is
-      # set as a class variable because we need to access it after the
-      # Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
+      # The FakeVMConfig instance is used to collect the config details we care
+      # about. It's set as a class variable because we need to access it after
+      # the Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
       # specific instance of anything.
       # rubocop:disable Style/ClassVars
       def self.vm
@@ -83,11 +83,10 @@ module Avsh
       end
 
       def parsed_config(parsed_config_class = ParsedConfig)
-        machine_synced_folders = {}
-        @machines.each do |machine_name, machine_config|
-          machine_synced_folders[machine_name] = machine_config.synced_folders
+        machine_synced_folders = @machines.map do |machine_name, machine_config|
+          [machine_name, machine_config.synced_folders]
         end
-        parsed_config_class.new(@synced_folders, machine_synced_folders,
+        parsed_config_class.new(@synced_folders, Hash[machine_synced_folders],
                                 @primary_machine)
       end
 

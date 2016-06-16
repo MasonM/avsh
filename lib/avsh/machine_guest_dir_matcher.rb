@@ -19,8 +19,8 @@ module Avsh
         unless @vagrant_config.machine?(desired_machine)
           raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
         end
-        # Prune other machines so we only matching against the desired machine's
-        # synced folders.
+        # Prune other machines so we're only matching against the desired
+        # machine's synced folders.
         synced_folders_by_machine.keep_if do |machine_name, _|
           machine_name == desired_machine
         end
