@@ -1,46 +1,54 @@
 require 'spec_helper'
 
 describe Avsh::VagrantfileEnvironment do
-  context 'prepping Vagrant module' do
-    it 'correctly sets dummy Configure object' do
-      dummy_configure = described_class.prep_vagrant_configure
-      expect(described_class::Vagrant.class_variable_get(:@@configure))
-        .to eq dummy_configure
-    end
-  end
-
-  context 'dummy Vagrant module' do
+  context 'fake Vagrant module' do
     subject { described_class::Vagrant }
 
     it 'returns true when has_plugin? is called' do
       expect(subject.has_plugin?('foo')).to eq true
     end
 
-    it 'yields the set Configure object when configure() is called' do
-      subject.class_variable_set(:@@configure, 'foo')
-      expect { |b| subject.configure(&b) }.to yield_with_args('foo')
+    it 'yields FakeVagrantConfig when configure() is called' do
+      expect { |b| subject.configure(&b) }
+        .to yield_with_args(described_class::FakeVagrantConfig)
     end
 
-    it 'ignores other methods' do
+    it 'ignores irrelevant methods' do
       expect(subject.foobar).to eq nil
     end
   end
 
-  context 'dummy Configure module' do
+  context 'FakeVagrantConfig module' do
+    subject { described_class::FakeVagrantConfig }
+
+    it 'returns the same FakeVMConfig object when vm is called twice' do
+      expect(subject.vm).to eq subject.vm
+    end
+
+    it 'returns DummyConfig when irrelevant method is called' do
+      expect(subject.foobar).to eq described_class::DummyConfig
+    end
+  end
+
+  context 'FakeVMConfig class' do
     stubbed_parsed_config = Struct.new(:default_synced_folders,
                                        :machine_synced_folders,
                                        :primary_machine)
 
-    subject { described_class::Configure.new }
+    subject { described_class::FakeVMConfig.new }
 
-    context 'with simple Vagrantfile' do
+    it 'returns DummyConfig when irrelevant method is called' do
+      expect(subject.foobar).to eq described_class::DummyConfig
+    end
+
+    context 'with a simple Vagrantfile' do
       it 'returns a correct ParsedConfig object' do
         expect(subject.parsed_config(stubbed_parsed_config))
           .to eq stubbed_parsed_config.new({}, {}, nil)
       end
     end
 
-    context 'with multi-machine Vagrantfile' do
+    context 'with a multi-machine Vagrantfile' do
       before do
         subject.synced_folder('/foo', '/bar')
         subject.define('machine1') {}

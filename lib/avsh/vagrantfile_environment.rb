@@ -2,16 +2,7 @@ module Avsh
   # This module is a horrible hack to parse out the relevant config details from
   # a Vagrantfile, without incurring the overhead of loading Vagrant.
   module VagrantfileEnvironment
-    def self.prep_vagrant_configure
-      # The dummy_configure object will be used to collect the config details.
-      # We need to set it as a class variable on Vagrant, since we can't tell
-      # the Vagrantfile to use a specific instance of Vagrant.
-      dummy_configure = Configure.new
-      Vagrant.class_variable_set(:@@configure, dummy_configure)
-      dummy_configure
-    end
-
-    # Dummy Vagrant module that stubs out everything except what's needed to
+    # Fake Vagrant module that stubs out everything except what's needed to
     # extract config details.
     module Vagrant
       VERSION = '1.8.3'.freeze
@@ -22,21 +13,48 @@ module Avsh
         # this is probably doing dependency checking, and will terminate if this
         # doesn't return true. However, this could result in unwanted behavior
         # if the Vagrantfile does weird things like ensuring a plugin DOESN'T
-        # exist. I've never seen that before, though.
+        # exist. I can't think of any reason for doing that.
         true
       end
       # rubocop:enable all
 
       def self.configure(*)
-        # Give the provided block the dummy_configure object set above
-        yield @@configure
+        yield FakeVagrantConfig
       end
 
       def self.method_missing(*) end # ignore everything else
     end
 
-    # Dummy Configure object to collect the config details.
-    class Configure
+    # Based on https://github.com/mitchellh/vagrant/blob/v1.8.4/lib/vagrant/config/v2/dummy_config.rb
+    module DummyConfig
+      def self.method_missing(*)
+        DummyConfig
+      end
+    end
+
+    # Fake Vagrant::Config module
+    module FakeVagrantConfig
+      # The FakeVMConfig instance of is used to collect config details and is
+      # set as a class variable because we need to access it after the
+      # Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
+      # specific instance of anything.
+      # rubocop:disable Style/ClassVars
+      def self.vm
+        @@fake_vm_config ||= FakeVMConfig.new
+      end
+      # rubocop:enable all
+
+      def self.method_missing(*)
+        DummyConfig
+      end
+    end
+
+    def self.parsed_config
+      FakeVagrantConfig.vm.parsed_config
+    end
+
+    # Collects config details for vm definitions
+    class FakeVMConfig
       def initialize
         @synced_folders = {}
         @machines = {}
@@ -51,16 +69,13 @@ module Avsh
         is_primary = options && options.fetch(:primary, false)
         @primary_machine = machine_name.to_s if is_primary
 
-        machine_config = Configure.new
+        machine_config = FakeVMConfig.new
         @machines[machine_name.to_s] = machine_config
         yield machine_config
       end
 
-      # Ensure this object continues to be used when defining a multi-machine
-      # setup, and ignore any other methods, since they don't matter.
       def method_missing(*)
-        yield self if block_given?
-        self
+        DummyConfig
       end
 
       def parsed_config(parsed_config_class = ParsedConfig)

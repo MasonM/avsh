@@ -11,11 +11,7 @@ describe Avsh::VagrantfileEvaluator do
     before { File.write('/Vagrantfile', 'foo') }
 
     it 'successfully returns parsed config' do
-      dummy_configure = double
-      allow(dummy_configure).to receive(:parsed_config).and_return('success')
-      allow(environment).to receive(:prep_vagrant_configure)
-        .and_return(dummy_configure)
-
+      allow(environment).to receive(:parsed_config).and_return('success')
       expect(environment).to receive(:module_eval).with('foo', '/Vagrantfile')
 
       expect(subject.evaluate('/Vagrantfile')).to eq 'success'
@@ -24,8 +20,6 @@ describe Avsh::VagrantfileEvaluator do
 
   context 'with non-existent vagrantfile' do
     it 'raises an exception' do
-      allow(environment).to receive(:prep_vagrant_configure)
-
       expect { subject.evaluate('/foo') }
         .to raise_error(Avsh::VagrantfileEvalError)
     end
@@ -35,7 +29,6 @@ describe Avsh::VagrantfileEvaluator do
     before { File.write('/Vagrantfile', 'foo') }
 
     it 'raises an exception' do
-      allow(environment).to receive(:prep_vagrant_configure)
       allow(environment).to receive(:module_eval).and_raise(SyntaxError.new)
 
       expect { subject.evaluate('/foo') }
