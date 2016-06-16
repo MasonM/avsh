@@ -63,7 +63,7 @@ module Avsh
         self
       end
 
-      def parsed_config(parsed_config_class)
+      def parsed_config(parsed_config_class = ParsedConfig)
         machine_synced_folders = {}
         @machines.each do |machine_name, machine_config|
           machine_synced_folders[machine_name] = machine_config.synced_folders

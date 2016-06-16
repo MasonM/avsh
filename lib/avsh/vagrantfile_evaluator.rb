@@ -4,7 +4,7 @@ module Avsh
   # We inject an instance of the Configure class into the Vagrant module so we
   # can collect the configuration details we care about.
   class VagrantfileEvaluator
-    def initialize(logger, environment)
+    def initialize(logger, environment = VagrantfileEnvironment)
       @logger = logger
       @environment = environment
     end
@@ -22,7 +22,7 @@ module Avsh
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
 
-      dummy_configure.parsed_config(ParsedConfig)
+      dummy_configure.parsed_config
     end
   end
 end
