@@ -74,6 +74,10 @@ module Avsh
         yield machine_config
       end
 
+      def vm
+        self
+      end
+
       def method_missing(*)
         DummyConfig
       end

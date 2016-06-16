@@ -26,8 +26,10 @@ module Avsh
         folders = @machine_synced_folders.map do |name, synced_folders|
           [name, merge_with_defaults(synced_folders)]
         end
+
         # Sort the primary machine to the top, since it should be matched first
         folders.sort_by! { |f| @primary_machine <=> f[0] } if @primary_machine
+
         Hash[folders]
       end
     end
