@@ -21,28 +21,19 @@ module Avsh
 
     def collect_folders_by_machine
       if @machine_synced_folders.empty?
-        { 'default' => merge_with_defaults({}) }
+        { 'default' => @default_synced_folders }
       else
         folders = @machine_synced_folders.map do |name, synced_folders|
-          [name, merge_with_defaults(synced_folders)]
+          [name, @default_synced_folders.merge(synced_folders)]
         end
 
         # Sort the primary machine to the top, since it should be matched first
-        folders.sort_by! { |f| @primary_machine <=> f[0] } if @primary_machine
+        if @primary_machine
+          folders.sort_by! { |f| f[0] == @primary_machine ? 0 : 1 }
+        end
 
         Hash[folders]
       end
-    end
-
-    private
-
-    def merge_with_defaults(synced_folders)
-      default_folders = @default_synced_folders.dup
-      if !synced_folders.value?('/vagrant') && !synced_folders.key?('.')
-        # Add default /vagrant share unless overriden
-        default_folders = { '.' => '/vagrant' }.merge(default_folders)
-      end
-      default_folders.merge(synced_folders)
     end
   end
 end

@@ -26,10 +26,8 @@ describe Avsh::ParsedConfig do
       expect(subject.primary_machine).to be nil
     end
 
-    it 'returns default with /vagrant mapping in collect_folders_by_machine' do
-      expect(subject.collect_folders_by_machine).to eq(
-        'default' => { '.' => '/vagrant' }
-      )
+    it 'returns nothing in collect_folders_by_machine' do
+      expect(subject.collect_folders_by_machine).to eq('default' => {})
     end
   end
 
@@ -67,12 +65,10 @@ describe Avsh::ParsedConfig do
       # the top, and the normal hash comparisons don't respect order
       expect(subject.collect_folders_by_machine.to_a).to eq [
         ['primary', {
-          '/default' => '/foo/',
-          '.' => '/vagrant'
+          '/default' => '/foo/'
         }],
         ['first', {
           '/default' => '/foo/',
-          '.' => '/vagrant',
           '/foo' => '/bar'
         }],
         ['overrides_defaults', {

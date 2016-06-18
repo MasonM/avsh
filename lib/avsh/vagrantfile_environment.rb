@@ -56,13 +56,17 @@ module Avsh
     # Collects config details for vm definitions
     class FakeVMConfig
       def initialize
-        @synced_folders = {}
+        @synced_folders = { '.' => '/vagrant' }
         @machines = {}
         @primary_machine = nil
       end
 
-      def synced_folder(src, dest, *_args)
-        @synced_folders[src] = dest unless @synced_folders.include?(src)
+      def synced_folder(src, dest, **opts)
+        if opts[:disabled]
+          @synced_folders.delete(src)
+        else
+          @synced_folders[src] = dest
+        end
       end
 
       def define(machine_name, options = nil)
