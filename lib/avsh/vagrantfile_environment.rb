@@ -63,8 +63,8 @@ module Avsh
         @primary_machine = nil
       end
 
-      def synced_folder(src, dest, **opts)
-        if opts[:disabled]
+      def synced_folder(src, dest, options = nil)
+        if options && options[:disabled]
           @synced_folders.delete(src)
         else
           @synced_folders[src] = dest
