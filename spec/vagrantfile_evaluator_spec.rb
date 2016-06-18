@@ -7,6 +7,8 @@ describe Avsh::VagrantfileEvaluator do
 
   subject { described_class.new(double(debug: nil), environment) }
 
+  before { allow(environment).to receive(:prep) }
+
   context 'with valid vagrantfile' do
     before { File.write('/Vagrantfile', 'foo') }
 

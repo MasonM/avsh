@@ -32,25 +32,27 @@ module Avsh
       end
     end
 
-    # Fake Vagrant::Config module
-    module FakeVagrantConfig
+    def self.prep
       # The FakeVMConfig instance is used to collect the config details we care
       # about. It's set as a class variable because we need to access it after
       # the Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
       # specific instance of anything.
-      # rubocop:disable Style/ClassVars
-      def self.vm
-        @@fake_vm_config ||= FakeVMConfig.new
-      end
-      # rubocop:enable all
-
-      def self.method_missing(*)
-        DummyConfig
-      end
+      FakeVagrantConfig.class_variable_set(:@@fake_vm_config, FakeVMConfig.new)
     end
 
     def self.parsed_config
       FakeVagrantConfig.vm.parsed_config
+    end
+
+    # Fake Vagrant::Config module
+    module FakeVagrantConfig
+      def self.vm
+        @@fake_vm_config
+      end
+
+      def self.method_missing(*)
+        DummyConfig
+      end
     end
 
     # Collects config details for vm definitions
@@ -70,8 +72,7 @@ module Avsh
       end
 
       def define(machine_name, options = nil)
-        is_primary = options && options.fetch(:primary, false)
-        @primary_machine = machine_name.to_s if is_primary
+        @primary_machine = machine_name.to_s if options && options[:primary]
 
         machine_config = FakeVMConfig.new
         @machines[machine_name.to_s] = machine_config

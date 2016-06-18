@@ -22,6 +22,7 @@ describe Avsh::VagrantfileEnvironment do
     subject { described_class::FakeVagrantConfig }
 
     it 'returns the same FakeVMConfig object when vm is called twice' do
+      described_class.prep
       expect(subject.vm).to eq subject.vm
     end
 
