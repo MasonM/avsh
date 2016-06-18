@@ -64,7 +64,8 @@ module Avsh
     def initialize(command, status, stdout_and_stderr)
       super(
         'avsh got an error while trying to close the SSH connection with the ' \
-        "the command '#{command}'\nStatus: #{status}\n" \
+        "the command '#{command}'\n" \
+        "Status: #{status}\n" \
         "Output: #{stdout_and_stderr}"
       )
     end
@@ -73,26 +74,26 @@ module Avsh
   # Indicates failures to get SSH configuration from "vagrant ssh-config"
   class VagrantSshConfigError < Error
     def initialize(machine_name, command, status, stdout_and_stderr)
+      msg = 'avsh failed to determine the SSH configuration for the machine ' \
+        "'#{machine_name}'.\n"
       if stdout_and_stderr.include?('not yet ready for SSH')
-        # Check if Vagrant says the VM is not ready, as that's the most common
-        # case. This won't work in non-English locales, since the exact error
-        # message is locale-specific. It'd be possible to have it work in other
-        # locales by passing the '--machine-readable' flag to 'vagrant
-        # ssh-config' and checking for 'Vagrant::Errors::SSHNotReady' in the
-        # output, but '--machine-readable' is an experimental feature that's
-        # subject to change according to https://www.vagrantup.com/docs/cli/machine-readable.html
-        super(stdout_and_stderr)
+        # Check if Vagrant says the VM is not ready, since that means
+        # VAGRANT_CWD is correct, but the machine potentially isn't. This won't
+        # work in non-English locales, since the exact error message is
+        # locale-specific. It'd be possible to have it work in other locales by
+        # passing the '--machine-readable' flag to 'vagrant ssh-config' and
+        # checking for 'Vagrant::Errors::SSHNotReady' in the output, but
+        # '--machine-readable' is an experimental feature that's subject to
+        # change according to https://www.vagrantup.com/docs/cli/machine-readable.html
+        msg += 'Use the --machine flag to specify a different machine.'
       else
-        super(
-          'avsh failed to determine the SSH configuration for the machine ' \
-          "'#{machine_name}'.\n" \
-          'Is the VAGRANT_CWD setting correct? ' \
-          "See README.md for details.\n\n" \
-          "Details:\n" \
-          "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
-          "Vagrant output:\n#{stdout_and_stderr}"
-        )
+        msg += 'Is the VAGRANT_CWD setting correct? See README.md for details.'
       end
+      super(msg +
+        "\n\nDetails:\n" \
+        "Command \"#{command}\" exited with status #{status.exitstatus}\n" \
+        "Vagrant output:\n#{stdout_and_stderr}"
+      )
     end
   end
 

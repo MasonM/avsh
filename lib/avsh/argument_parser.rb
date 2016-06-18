@@ -47,7 +47,7 @@ module Avsh
 
         opts.on('-m', '--machine MACHINE', 'Target Vagrant machine',
                 '(if not given, will infer from Vagrantfile. See README.md ' \
-                'for details.') do |machine|
+                'for details.)') do |machine|
           @options[:machine] = machine.strip
         end
 
