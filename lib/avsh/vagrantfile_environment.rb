@@ -32,6 +32,17 @@ module Avsh
       end
     end
 
+    # Fake Vagrant::Config module
+    module FakeVagrantConfig
+      def self.vm
+        @@fake_vm_config
+      end
+
+      def self.method_missing(*)
+        DummyConfig
+      end
+    end
+
     def self.prep
       # The FakeVMConfig instance is used to collect the config details we care
       # about. It's set as a class variable because we need to access it after
@@ -42,17 +53,6 @@ module Avsh
 
     def self.parsed_config
       FakeVagrantConfig.vm.parsed_config
-    end
-
-    # Fake Vagrant::Config module
-    module FakeVagrantConfig
-      def self.vm
-        @@fake_vm_config
-      end
-
-      def self.method_missing(*)
-        DummyConfig
-      end
     end
 
     # Collects config details for vm definitions
