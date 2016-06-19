@@ -19,7 +19,7 @@ module Avsh
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
 
-      @environment.parsed_config
+      @environment.parsed_config(vagrantfile_path)
     end
   end
 end

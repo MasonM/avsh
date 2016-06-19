@@ -2,17 +2,19 @@ require 'spec_helper'
 
 describe Avsh::ParsedConfig do
   context 'with /vagrant mapped to a non-default directory' do
-    subject { described_class.new({ '/foo/bar' => '.' }, {}, nil) }
+    subject do
+      described_class.new('/v/Vagrantfile', { '/foo/bar' => '/v' }, {}, nil)
+    end
 
     it 'returns the mapped directory in collect_folders_by_machine' do
       expect(subject.collect_folders_by_machine).to eq(
-        'default' => { '/foo/bar' => '.' }
+        'default' => { '/foo/bar' => '/v' }
       )
     end
   end
 
   context 'with single machine' do
-    subject { described_class.new({}, {}, nil) }
+    subject { described_class.new('/va/vagrantfile', {}, {}, nil) }
 
     it 'returns false in machine?' do
       expect(subject.machine?('foo')).to be false
@@ -28,7 +30,7 @@ describe Avsh::ParsedConfig do
 
     it 'returns default vagrant share in collect_folders_by_machine' do
       expect(subject.collect_folders_by_machine).to eq(
-        'default' => { '/vagrant' => '.' }
+        'default' => { '/vagrant' => '/va' }
       )
     end
   end
@@ -36,11 +38,12 @@ describe Avsh::ParsedConfig do
   context 'with disabled folders' do
     subject do
       described_class.new(
+        '/vagrantfile_path/foo',
         { '/foo/' => '/default' },
         {
           'main' => {
             '/foo/' => { host_path: '/default', disabled: true },
-            '/vagrant' => { host_path: '.', disabled: true },
+            '/vagrant' => { host_path: '/vagrantfile_path', disabled: true },
             '/bar/' => { host_path: '/baz' }
           }
         },
@@ -58,12 +61,13 @@ describe Avsh::ParsedConfig do
   context 'with multiple machines' do
     subject do
       described_class.new(
+        '/vagrantfile_path/VAGRANTFILE',
         { '/foo/' => '/default' },
         {
           'first' => { '/bar' => { host_path: '/foo' } },
           'primary' => {},
           'overrides_defaults' => {
-            '/vagrant2' => { host_path: '.' },
+            '/vagrant2' => { host_path: '/vagrantfile_path' },
             '/foo/' => { host_path: '/new' }
           }
         },
@@ -93,16 +97,16 @@ describe Avsh::ParsedConfig do
       expect(subject.collect_folders_by_machine.to_a).to eq [
         ['primary', {
           '/foo/' => '/default',
-          '/vagrant' => '.'
+          '/vagrant' => '/vagrantfile_path'
         }],
         ['first', {
           '/foo/' => '/default',
-          '/vagrant' => '.',
+          '/vagrant' => '/vagrantfile_path',
           '/bar' => '/foo'
         }],
         ['overrides_defaults', {
           '/foo/' => '/new',
-          '/vagrant2' => '.'
+          '/vagrant2' => '/vagrantfile_path'
         }]
       ]
     end

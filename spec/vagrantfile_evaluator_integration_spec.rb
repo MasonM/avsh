@@ -1,22 +1,20 @@
 require 'spec_helper'
 
 describe 'VagrantfileEvaluator integration tests' do
-  subject do
-    Avsh::VagrantfileEvaluator.new(double(debug: nil),
-                                   Avsh::VagrantfileEnvironment.clone)
-  end
-
   before do
     skip('cloning the VagrantfileEnvironment doesn\'t work under ' \
          'Ruby 1.9.3') if RUBY_VERSION == '1.9.3'
   end
 
-  def vagrantfile(name)
-    File.dirname(__FILE__) + "/vagrantfiles/#{name}"
+  subject do
+    Avsh::VagrantfileEvaluator.new(double(debug: nil),
+                                   Avsh::VagrantfileEnvironment.clone)
   end
 
+  let(:vagrantfiles_dir) { File.dirname(__FILE__) + '/vagrantfiles' }
+
   context 'with Vagrant\'s Vagrantfile' do
-    let!(:parsed_config) { subject.evaluate(vagrantfile('vagrant')) }
+    let!(:parsed_config) { subject.evaluate("#{vagrantfiles_dir}/vagrant") }
 
     it 'has a single unnamed machine' do
       expect(parsed_config.first_machine).to eq 'default'
@@ -24,14 +22,14 @@ describe 'VagrantfileEvaluator integration tests' do
 
     it 'only has the default synced folder' do
       expect(parsed_config.collect_folders_by_machine).to eq(
-        'default' => { '/vagrant' => '.' }
+        'default' => { '/vagrant' => vagrantfiles_dir }
       )
     end
   end
 
   context 'with History of Science Society\'s Vagrantfile' do
     let!(:parsed_config) do
-      subject.evaluate(vagrantfile('history_of_science_society'))
+      subject.evaluate("#{vagrantfiles_dir}/history_of_science_society")
     end
 
     it 'has a single machine named "hss"' do
@@ -42,7 +40,7 @@ describe 'VagrantfileEvaluator integration tests' do
     it 'has the default synced folder and one defined synced folder' do
       expect(parsed_config.collect_folders_by_machine).to eq(
         'hss' => {
-          '/vagrant' => '.',
+          '/vagrant' => vagrantfiles_dir,
           '/home/vagrant/hss' => File.dirname(__FILE__)
         }
       )
@@ -50,7 +48,9 @@ describe 'VagrantfileEvaluator integration tests' do
   end
 
   context 'with Vagrant Google Compute Engine\'s Vagrantfile' do
-    let!(:parsed_config) { subject.evaluate(vagrantfile('vagrant_google')) }
+    let!(:parsed_config) do
+      subject.evaluate("#{vagrantfiles_dir}/vagrant_google")
+    end
 
     it 'has two machines, z1c and z1f' do
       expect(parsed_config.first_machine).to eq 'z1c'
@@ -60,8 +60,8 @@ describe 'VagrantfileEvaluator integration tests' do
 
     it 'has the default synced folder for both machines' do
       expect(parsed_config.collect_folders_by_machine).to eq(
-        'z1c' => { '/vagrant' => '.' },
-        'z1f' => { '/vagrant' => '.' }
+        'z1c' => { '/vagrant' => vagrantfiles_dir },
+        'z1f' => { '/vagrant' => vagrantfiles_dir }
       )
     end
   end

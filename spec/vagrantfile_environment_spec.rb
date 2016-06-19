@@ -33,8 +33,8 @@ describe Avsh::VagrantfileEnvironment do
 
   context 'FakeVMConfig class' do
     let(:stubbed_parsed_config) do
-      Struct.new(:default_synced_folders, :machine_synced_folders,
-                 :primary_machine)
+      Struct.new(:vagrantfile_path, :default_synced_folders,
+                 :machine_synced_folders, :primary_machine)
     end
 
     subject { described_class::FakeVMConfig.new }
@@ -45,8 +45,8 @@ describe Avsh::VagrantfileEnvironment do
 
     context 'with a simple Vagrantfile' do
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config(stubbed_parsed_config))
-          .to eq stubbed_parsed_config.new({}, {}, nil)
+        expect(subject.parsed_config('/foo/bar', stubbed_parsed_config))
+          .to eq stubbed_parsed_config.new('/foo/bar', {}, {}, nil)
       end
     end
 
@@ -64,8 +64,9 @@ describe Avsh::VagrantfileEnvironment do
       end
 
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config(stubbed_parsed_config))
+        expect(subject.parsed_config('/foo/bar', stubbed_parsed_config))
           .to eq stubbed_parsed_config.new(
+            '/foo/bar',
             { '/bar' => { host_path: '/foo', disabled: nil } },
             {
               'machine1' => {},
