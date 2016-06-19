@@ -61,7 +61,7 @@ module Avsh
 
     def match_synced_folder(host_directory, folders)
       vagrantfile_dir = File.dirname(@vagrantfile_path)
-      folders.each do |src, dest|
+      folders.each do |dest, src|
         real_src = File.expand_path(src, vagrantfile_dir)
         next unless host_directory.start_with?(real_src)
         relative_directory = host_directory[real_src.length..-1]

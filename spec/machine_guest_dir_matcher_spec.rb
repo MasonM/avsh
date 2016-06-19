@@ -30,7 +30,7 @@ describe Avsh::MachineGuestDirMatcher do
     context 'no matching synced folders' do
       it 'uses the desired machine' do
         allow(stub_config).to receive_messages(
-          collect_folders_by_machine: { machine1: { '/foo' => '/bar' } },
+          collect_folders_by_machine: { machine1: { '/bar' => '/foo' } },
           machine?: true
         )
         expect(subject.match('/', 'machine1')).to eq ['machine1', nil]
@@ -41,8 +41,8 @@ describe Avsh::MachineGuestDirMatcher do
       it 'uses the desired machine and first matching guest dir' do
         allow(stub_config).to receive_messages(
           collect_folders_by_machine: {
-            'machine1' => { '/foo' => '/bar' },
-            'machine2' => { '/bam' => '/baz', '/foo' => '/bar2' },
+            'machine1' => { '/bar' => '/foo' },
+            'machine2' => { '/baz' => '/bam', '/bar2' => '/foo' },
             'machine3' => {}
           },
           machine?: true
@@ -77,7 +77,7 @@ describe Avsh::MachineGuestDirMatcher do
   context 'exact match for a synced folder' do
     it 'uses the guest dir' do
       allow(stub_config).to receive_messages(
-        collect_folders_by_machine: { 'machine1' => { '/bam' => '/baz' } }
+        collect_folders_by_machine: { 'machine1' => { '/baz' => '/bam' } }
       )
       expect(subject.match('/bam/')).to eq ['machine1', '/baz/']
     end
@@ -87,9 +87,9 @@ describe Avsh::MachineGuestDirMatcher do
     it 'uses the first matching machine and guest dir' do
       allow(stub_config).to receive_messages(
         collect_folders_by_machine: {
-          'machine1' => { '/bam' => '/baz' },
-          'machine2' => { '/baz' => '/baz2', '/foo' => '/bar2' },
-          'machine3' => { '/foo' => '/bar' }
+          'machine1' => { '/baz' => '/bam' },
+          'machine2' => { '/baz2' => '/baz', '/bar2' => '/foo' },
+          'machine3' => { '/bar' => '/foo' }
         }
       )
       expect(subject.match('/foo/foo2/')).to eq ['machine2', '/bar2/foo2']

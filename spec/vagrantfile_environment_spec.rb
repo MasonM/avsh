@@ -46,16 +46,17 @@ describe Avsh::VagrantfileEnvironment do
     context 'with a simple Vagrantfile' do
       it 'returns a correct ParsedConfig object' do
         expect(subject.parsed_config(stubbed_parsed_config))
-          .to eq stubbed_parsed_config.new({ '.' => '/vagrant' }, {}, nil)
+          .to eq stubbed_parsed_config.new({}, {}, nil)
       end
     end
 
     context 'with a multi-machine Vagrantfile' do
       before do
-        subject.synced_folder('/foo', '/bar')
+        subject.vm.synced_folder('/foo', '/bar')
         subject.define('machine1') {}
         subject.define('machine2', primary: true) do |c|
           c.vm.network :private_network, ip: '192.168.3.3'
+          c.synced_folder('/foo', '/bar', disabled: true)
           c.synced_folder('/foo', '/bar2')
           c.synced_folder('/bar', '/baz')
         end
@@ -65,12 +66,15 @@ describe Avsh::VagrantfileEnvironment do
       it 'returns a correct ParsedConfig object' do
         expect(subject.parsed_config(stubbed_parsed_config))
           .to eq stubbed_parsed_config.new(
-            { '.' => '/vagrant', '/foo' => '/bar' },
+            { '/bar' => { host_path: '/foo', disabled: nil } },
             {
-              'machine1' => { '.' => '/vagrant' },
-              'machine2' => { '.' => '/vagrant', '/foo' => '/bar2',
-                              '/bar' => '/baz' },
-              'machine3' => { '.' => '/vagrant', '/1' => '/2' }
+              'machine1' => {},
+              'machine2' => {
+                '/bar' => { host_path: '/foo', disabled: true },
+                '/bar2' => { host_path: '/foo', disabled: nil },
+                '/baz' => { host_path: '/bar', disabled: nil }
+              },
+              'machine3' => { '/2' => { host_path: '/1', disabled: nil } }
             },
             'machine2'
           )

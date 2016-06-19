@@ -3,9 +3,16 @@ module Avsh
   class ParsedConfig
     attr_reader :primary_machine
 
-    def initialize(default_synced_folders, machine_synced_folders,
+    # @param global_synced_folders [Hash] The globally-defined synced folders,
+    #   with keys being the guest directory (destination) and values being the
+    #   host directory (source).
+    # @param machine_synced_folders [Hash] Hash of machine names to a hash of
+    #   synced folders defined in that machine definition (potentially empty)
+    # @param primary_machine [String] The name of the primary machine, if one
+    #   was defined
+    def initialize(global_synced_folders, machine_synced_folders,
                    primary_machine)
-      @default_synced_folders = default_synced_folders.freeze
+      @global_synced_folders = global_synced_folders.freeze
       @machine_synced_folders = machine_synced_folders.freeze
       @primary_machine = primary_machine
     end
@@ -21,10 +28,10 @@ module Avsh
 
     def collect_folders_by_machine
       if @machine_synced_folders.empty?
-        { 'default' => @default_synced_folders }
+        { 'default' => add_vagrant_default(@global_synced_folders.dup) }
       else
         folders = @machine_synced_folders.map do |name, synced_folders|
-          [name, @default_synced_folders.merge(synced_folders)]
+          [name, merge_with_globals(synced_folders)]
         end
 
         # Sort the primary machine to the top, since it should be matched first
@@ -33,6 +40,29 @@ module Avsh
         end
 
         Hash[folders]
+      end
+    end
+
+    private
+
+    def add_vagrant_default(synced_folders)
+      # Add default /vagrant share (see https://github.com/mitchellh/vagrant/blob/v1.8.4/plugins/kernel_v2/config/vm.rb#L511)
+      if !synced_folders.key?('/vagrant') && !synced_folders.value?('.')
+        synced_folders['/vagrant'] = '.'
+      end
+      synced_folders
+    end
+
+    def merge_with_globals(synced_folders)
+      add_vagrant_default(@global_synced_folders.dup).tap do |merged|
+        synced_folders.each do |guest_path, opts|
+          if opts[:disabled]
+            merged.delete(guest_path)
+            next
+          end
+          merged.delete('/vagrant') if opts[:host_path] == '.'
+          merged[guest_path] = opts[:host_path]
+        end
       end
     end
   end

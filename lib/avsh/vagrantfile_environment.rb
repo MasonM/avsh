@@ -58,17 +58,18 @@ module Avsh
     # Collects config details for vm definitions
     class FakeVMConfig
       def initialize
-        @synced_folders = { '.' => '/vagrant' }
+        @synced_folders = {}
         @machines = {}
         @primary_machine = nil
       end
 
       def synced_folder(src, dest, options = nil)
-        if options && options[:disabled]
-          @synced_folders.delete(src)
-        else
-          @synced_folders[src] = dest
-        end
+        # Hash by the guest directory because that's what Vagrant does:
+        # https://github.com/mitchellh/vagrant/blob/v1.8.4/plugins/kernel_v2/config/vm.rb#L217
+        @synced_folders[dest] = {
+          host_path: src,
+          disabled: options && options.key?(:disabled)
+        }
       end
 
       def define(machine_name, options = nil)
@@ -91,8 +92,11 @@ module Avsh
         machine_synced_folders = @machines.map do |machine_name, machine_config|
           [machine_name, machine_config.synced_folders]
         end
-        parsed_config_class.new(@synced_folders, Hash[machine_synced_folders],
-                                @primary_machine)
+        global_synced_folders = @synced_folders.reject do |_, opts|
+          opts[:disabled]
+        end
+        parsed_config_class.new(global_synced_folders,
+                                Hash[machine_synced_folders], @primary_machine)
       end
 
       protected

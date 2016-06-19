@@ -24,7 +24,7 @@ describe 'VagrantfileEvaluator integration tests' do
 
     it 'only has the default synced folder' do
       expect(parsed_config.collect_folders_by_machine).to eq(
-        'default' => { '.' => '/vagrant' }
+        'default' => { '/vagrant' => '.' }
       )
     end
   end
@@ -42,8 +42,8 @@ describe 'VagrantfileEvaluator integration tests' do
     it 'has the default synced folder and one defined synced folder' do
       expect(parsed_config.collect_folders_by_machine).to eq(
         'hss' => {
-          '.' => '/vagrant',
-          File.dirname(__FILE__) => '/home/vagrant/hss'
+          '/vagrant' => '.',
+          '/home/vagrant/hss' => File.dirname(__FILE__)
         }
       )
     end
@@ -60,8 +60,8 @@ describe 'VagrantfileEvaluator integration tests' do
 
     it 'has the default synced folder for both machines' do
       expect(parsed_config.collect_folders_by_machine).to eq(
-        'z1c' => { '.' => '/vagrant' },
-        'z1f' => { '.' => '/vagrant' }
+        'z1c' => { '/vagrant' => '.' },
+        'z1f' => { '/vagrant' => '.' }
       )
     end
   end
