@@ -6,6 +6,8 @@ AllCops:
     - '**/Rakefile'
     - 'spec/**'
     - 'lib/**'
+  Exclude:
+    - 'spec/vagrantfiles/**/*'
 
 Metrics/MethodLength:
   Max: 15

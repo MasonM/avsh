@@ -112,7 +112,6 @@ module Avsh
         fake_vm_config = FakeVagrantConfig.init_fake_vm_config(vagrantfile_path)
 
         # Prep global namespace
-        existing_constants = Object.constants
         Object.const_set(:Vagrant, Vagrant)
 
         begin
@@ -121,18 +120,13 @@ module Avsh
           # Re-raise with a more specific exception
           raise VagrantfileEvalError.new(vagrantfile_path, e)
         ensure
-          cleanup_global_namespace(existing_constants)
+          Object.send(:remove_const, :Vagrant)
+          if Object.const_defined?(:VAGRANTFILE_API_VERSION)
+            Object.send(:remove_const, :VAGRANTFILE_API_VERSION)
+          end
         end
 
         fake_vm_config.parsed_config
-      end
-
-      private
-
-      def cleanup_global_namespace(existing_constants)
-        (Object.constants - existing_constants).each do |const|
-          Object.send(:remove_const, const)
-        end
       end
     end
   end

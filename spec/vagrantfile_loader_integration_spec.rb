@@ -82,4 +82,27 @@ describe 'integration tests for loading vagrant files' do
       )
     end
   end
+
+  context 'with Laravel Homestead' do
+    let!(:parsed_config) do
+      # Tell Homestead's Vagrantfile to use our Homestead.yaml file
+      # rubocop:disable Style/GlobalVars
+      $confDir = vagrantfiles_dir
+      # rubocop:enable all
+      subject.load_vagrantfile("#{vagrantfiles_dir}/homestead/Vagrantfile")
+    end
+
+    it 'has a single unnamed machine' do
+      expect(parsed_config.first_machine).to eq 'default'
+    end
+
+    it 'has the default synced folder and one defined synced folder' do
+      expect(parsed_config.collect_folders_by_machine).to eq(
+        'default' => {
+          '/home/vagrant/Code' => '/etc',
+          '/vagrant' => "#{vagrantfiles_dir}/homestead"
+        }
+      )
+    end
+  end
 end
