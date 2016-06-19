@@ -21,9 +21,9 @@ describe Avsh::VagrantfileEnvironment do
   context 'FakeVagrantConfig module' do
     subject { described_class::FakeVagrantConfig }
 
-    it 'returns the same FakeVMConfig object when vm is called twice' do
-      described_class.prep('/foo')
-      expect(subject.vm).to eq subject.vm
+    it 'returns FakeVMConfig object after init_fake_vm_config() is called' do
+      vm_config = subject.init_fake_vm_config('/foo')
+      expect(subject.vm).to eq vm_config
     end
 
     it 'returns DummyConfig when irrelevant method is called' do
@@ -79,6 +79,45 @@ describe Avsh::VagrantfileEnvironment do
             },
             'machine2'
           )
+      end
+    end
+
+    context 'Loader class' do
+      subject { described_class::Loader.new(double(debug: nil)) }
+
+      let(:stub_vm_config) { double(parsed_config: 'success') }
+
+      before do
+        allow(described_class::FakeVagrantConfig)
+          .to receive(:init_fake_vm_config)
+          .with('/foo')
+          .and_return(stub_vm_config)
+      end
+
+      context 'with valid vagrantfile' do
+        it 'successfully returns parsed config' do
+          expect(Kernel).to receive(:load).with('/foo')
+
+          expect(subject.load_vagrantfile('/foo')).to eq 'success'
+        end
+      end
+
+      context 'with non-existent vagrantfile' do
+        it 'raises an exception' do
+          allow(Kernel).to receive(:load).and_raise(Errno::ENOENT)
+
+          expect { subject.load_vagrantfile('/foo') }
+            .to raise_error(Avsh::VagrantfileEvalError)
+        end
+      end
+
+      context 'with invalid vagrantfile' do
+        it 'raises an exception' do
+          allow(Kernel).to receive(:load).and_raise(SyntaxError)
+
+          expect { subject.load_vagrantfile('/foo') }
+            .to raise_error(Avsh::VagrantfileEvalError)
+        end
       end
     end
   end

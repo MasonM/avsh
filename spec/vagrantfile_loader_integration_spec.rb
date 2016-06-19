@@ -1,20 +1,21 @@
 require 'spec_helper'
 
-describe 'VagrantfileEvaluator integration tests' do
+describe 'integration tests for loading vagrant files' do
   before do
     skip('cloning the VagrantfileEnvironment doesn\'t work under ' \
          'Ruby 1.9.3') if RUBY_VERSION == '1.9.3'
   end
 
   subject do
-    Avsh::VagrantfileEvaluator.new(double(debug: nil),
-                                   Avsh::VagrantfileEnvironment.clone)
+    Avsh::VagrantfileEnvironment::Loader.new(double(debug: nil))
   end
 
   let(:vagrantfiles_dir) { File.dirname(__FILE__) + '/vagrantfiles' }
 
   context 'with Vagrant\'s Vagrantfile' do
-    let!(:parsed_config) { subject.evaluate("#{vagrantfiles_dir}/vagrant") }
+    let!(:parsed_config) do
+      subject.load_vagrantfile("#{vagrantfiles_dir}/vagrant")
+    end
 
     it 'has a single unnamed machine' do
       expect(parsed_config.first_machine).to eq 'default'
@@ -29,7 +30,7 @@ describe 'VagrantfileEvaluator integration tests' do
 
   context 'with History of Science Society\'s Vagrantfile' do
     let!(:parsed_config) do
-      subject.evaluate("#{vagrantfiles_dir}/history_of_science_society")
+      subject.load_vagrantfile("#{vagrantfiles_dir}/history_of_science_society")
     end
 
     it 'has a single machine named "hss"' do
@@ -49,7 +50,7 @@ describe 'VagrantfileEvaluator integration tests' do
 
   context 'with Vagrant Google Compute Engine\'s Vagrantfile' do
     let!(:parsed_config) do
-      subject.evaluate("#{vagrantfiles_dir}/vagrant_google")
+      subject.load_vagrantfile("#{vagrantfiles_dir}/vagrant_google")
     end
 
     it 'has two machines, z1c and z1f' do
@@ -68,7 +69,7 @@ describe 'VagrantfileEvaluator integration tests' do
 
   context 'with Vagrant LAMP Stack\'s Vagrantfile' do
     let!(:parsed_config) do
-      subject.evaluate("#{vagrantfiles_dir}/vagrant_lamp_stack")
+      subject.load_vagrantfile("#{vagrantfiles_dir}/vagrant_lamp_stack")
     end
 
     it 'has a single machine, "projectname"' do

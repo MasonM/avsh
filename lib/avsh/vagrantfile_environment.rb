@@ -38,22 +38,19 @@ module Avsh
         @@fake_vm_config
       end
 
+      # The FakeVMConfig instance is used to collect the config details we
+      # care about. It's set as a class variable because we need to access it
+      # after the Vagrantfile is loaded, and we can't tell the Vagrantfile to
+      # use a specific instance of anything.
+      # rubocop:disable Style/ClassVars
+      def self.init_fake_vm_config(vagrantfile_path)
+        @@fake_vm_config = FakeVMConfig.new(File.dirname(vagrantfile_path))
+      end
+      # rubocop:enable all
+
       def self.method_missing(*)
         DummyConfig
       end
-    end
-
-    def self.prep(vagrantfile_dir)
-      # The FakeVMConfig instance is used to collect the config details we care
-      # about. It's set as a class variable because we need to access it after
-      # the Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
-      # specific instance of anything.
-      FakeVagrantConfig.class_variable_set(:@@fake_vm_config,
-                                           FakeVMConfig.new(vagrantfile_dir))
-    end
-
-    def self.parsed_config
-      FakeVagrantConfig.vm.parsed_config
     end
 
     # Collects config details for vm definitions
@@ -101,6 +98,42 @@ module Avsh
       protected
 
       attr_reader :synced_folders
+    end
+
+    # Handles loading a Vagrantfile so it'll communicate with this environment
+    class Loader
+      def initialize(logger)
+        @logger = logger
+      end
+
+      def load_vagrantfile(vagrantfile_path)
+        @logger.debug "Parsing Vagrantfile '#{vagrantfile_path}'"
+
+        fake_vm_config = FakeVagrantConfig.init_fake_vm_config(vagrantfile_path)
+
+        # Prep global namespace
+        existing_constants = Object.constants
+        Object.const_set(:Vagrant, Vagrant)
+
+        begin
+          Kernel.load(vagrantfile_path)
+        rescue ScriptError, StandardError => e
+          # Re-raise with a more specific exception
+          raise VagrantfileEvalError.new(vagrantfile_path, e)
+        ensure
+          cleanup_global_namespace(existing_constants)
+        end
+
+        fake_vm_config.parsed_config
+      end
+
+      private
+
+      def cleanup_global_namespace(existing_constants)
+        (Object.constants - existing_constants).each do |const|
+          Object.send(:remove_const, const)
+        end
+      end
     end
   end
 end

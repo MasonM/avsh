@@ -28,8 +28,8 @@ module Avsh
       finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
       vagrantfile_path = finder.find(host_directory)
 
-      evaluator = VagrantfileEvaluator.new(logger)
-      config = evaluator.evaluate(vagrantfile_path)
+      evaluator = VagrantfileEnviornment::Loader.new(logger)
+      config = evaluator.load(vagrantfile_path)
 
       matcher = MachineGuestDirMatcher.new(logger, vagrantfile_path, config)
       machine_name, guest_dir = matcher.match(host_directory, options[:machine])
