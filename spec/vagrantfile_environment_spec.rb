@@ -22,7 +22,7 @@ describe Avsh::VagrantfileEnvironment do
     subject { described_class::FakeVagrantConfig }
 
     it 'returns the same FakeVMConfig object when vm is called twice' do
-      described_class.prep
+      described_class.prep('/foo')
       expect(subject.vm).to eq subject.vm
     end
 
@@ -37,7 +37,7 @@ describe Avsh::VagrantfileEnvironment do
                  :machine_synced_folders, :primary_machine)
     end
 
-    subject { described_class::FakeVMConfig.new }
+    subject { described_class::FakeVMConfig.new('/foo') }
 
     it 'returns DummyConfig when irrelevant method is called' do
       expect(subject.foobar).to eq described_class::DummyConfig
@@ -45,8 +45,8 @@ describe Avsh::VagrantfileEnvironment do
 
     context 'with a simple Vagrantfile' do
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config('/foo/bar', stubbed_parsed_config))
-          .to eq stubbed_parsed_config.new('/foo/bar', {}, {}, nil)
+        expect(subject.parsed_config(stubbed_parsed_config))
+          .to eq stubbed_parsed_config.new('/foo', {}, {}, nil)
       end
     end
 
@@ -64,9 +64,9 @@ describe Avsh::VagrantfileEnvironment do
       end
 
       it 'returns a correct ParsedConfig object' do
-        expect(subject.parsed_config('/foo/bar', stubbed_parsed_config))
+        expect(subject.parsed_config(stubbed_parsed_config))
           .to eq stubbed_parsed_config.new(
-            '/foo/bar',
+            '/foo',
             { '/bar' => { host_path: '/foo', disabled: nil } },
             {
               'machine1' => {},

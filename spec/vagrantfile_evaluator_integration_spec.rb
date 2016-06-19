@@ -65,4 +65,20 @@ describe 'VagrantfileEvaluator integration tests' do
       )
     end
   end
+
+  context 'with Vagrant LAMP Stack\'s Vagrantfile' do
+    let!(:parsed_config) do
+      subject.evaluate("#{vagrantfiles_dir}/vagrant_lamp_stack")
+    end
+
+    it 'has a single machine, "projectname"' do
+      expect(parsed_config.first_machine).to eq 'projectname'
+    end
+
+    it 'overides the default synced folder for the machine' do
+      expect(parsed_config.collect_folders_by_machine).to eq(
+        'projectname' => { '/var/www/projectname' => vagrantfiles_dir }
+      )
+    end
+  end
 end

@@ -43,21 +43,23 @@ module Avsh
       end
     end
 
-    def self.prep
+    def self.prep(vagrantfile_dir)
       # The FakeVMConfig instance is used to collect the config details we care
       # about. It's set as a class variable because we need to access it after
       # the Vagrantfile is eval'd, and we can't tell the Vagrantfile to use a
       # specific instance of anything.
-      FakeVagrantConfig.class_variable_set(:@@fake_vm_config, FakeVMConfig.new)
+      FakeVagrantConfig.class_variable_set(:@@fake_vm_config,
+                                           FakeVMConfig.new(vagrantfile_dir))
     end
 
-    def self.parsed_config(vagrantfile_path)
-      FakeVagrantConfig.vm.parsed_config(vagrantfile_path)
+    def self.parsed_config
+      FakeVagrantConfig.vm.parsed_config
     end
 
     # Collects config details for vm definitions
     class FakeVMConfig
-      def initialize
+      def initialize(vagrantfile_dir)
+        @vagrantfile_dir = vagrantfile_dir
         @synced_folders = {}
         @machines = {}
         @primary_machine = nil
@@ -66,8 +68,8 @@ module Avsh
       def synced_folder(src, dest, options = nil)
         # Hash by the guest directory because that's what Vagrant does:
         # https://github.com/mitchellh/vagrant/blob/v1.8.4/plugins/kernel_v2/config/vm.rb#L217
-        @synced_folders[File.expand_path(dest)] = {
-          host_path: File.expand_path(src),
+        @synced_folders[File.expand_path(dest, @vagrantfile_dir)] = {
+          host_path: File.expand_path(src, @vagrantfile_dir),
           disabled: options && options.key?(:disabled)
         }
       end
@@ -75,7 +77,7 @@ module Avsh
       def define(machine_name, options = nil)
         @primary_machine = machine_name.to_s if options && options[:primary]
 
-        machine_config = FakeVMConfig.new
+        machine_config = FakeVMConfig.new(@vagrantfile_dir)
         @machines[machine_name.to_s] = machine_config
         yield machine_config
       end
@@ -88,14 +90,11 @@ module Avsh
         DummyConfig
       end
 
-      def parsed_config(vagrantfile_path, parsed_config_class = ParsedConfig)
+      def parsed_config(parsed_config_class = ParsedConfig)
         machine_synced_folders = @machines.map do |machine_name, machine_config|
           [machine_name, machine_config.synced_folders]
         end
-        global_synced_folders = @synced_folders.reject do |_, opts|
-          opts[:disabled]
-        end
-        parsed_config_class.new(vagrantfile_path, global_synced_folders,
+        parsed_config_class.new(@vagrantfile_dir, synced_folders,
                                 Hash[machine_synced_folders], @primary_machine)
       end
 

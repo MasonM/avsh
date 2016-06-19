@@ -9,7 +9,7 @@ module Avsh
 
     def evaluate(vagrantfile_path)
       @logger.debug "Parsing Vagrantfile '#{vagrantfile_path}'"
-      @environment.prep
+      @environment.prep(File.dirname(vagrantfile_path))
 
       begin
         # Eval the Vagrantfile inside VagrantfileEnvironment
@@ -19,7 +19,7 @@ module Avsh
         raise VagrantfileEvalError.new(vagrantfile_path, e)
       end
 
-      @environment.parsed_config(vagrantfile_path)
+      @environment.parsed_config
     end
   end
 end

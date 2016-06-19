@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Avsh::ParsedConfig do
   context 'with /vagrant mapped to a non-default directory' do
     subject do
-      described_class.new('/v/Vagrantfile', { '/foo/bar' => '/v' }, {}, nil)
+      described_class.new('/v', { '/foo/bar' => { host_path: '/v' } }, {}, nil)
     end
 
     it 'returns the mapped directory in collect_folders_by_machine' do
@@ -14,7 +14,7 @@ describe Avsh::ParsedConfig do
   end
 
   context 'with single machine' do
-    subject { described_class.new('/va/vagrantfile', {}, {}, nil) }
+    subject { described_class.new('/va', {}, {}, nil) }
 
     it 'returns false in machine?' do
       expect(subject.machine?('foo')).to be false
@@ -38,8 +38,8 @@ describe Avsh::ParsedConfig do
   context 'with disabled folders' do
     subject do
       described_class.new(
-        '/vagrantfile_path/foo',
-        { '/foo/' => '/default' },
+        '/vagrantfile_path',
+        { '/foo/' => { host_path: '/default' } },
         {
           'main' => {
             '/foo/' => { host_path: '/default', disabled: true },
@@ -61,8 +61,8 @@ describe Avsh::ParsedConfig do
   context 'with multiple machines' do
     subject do
       described_class.new(
-        '/vagrantfile_path/VAGRANTFILE',
-        { '/foo/' => '/default' },
+        '/vagrantfile_path',
+        { '/foo/' => { host_path: '/default' } },
         {
           'first' => { '/bar' => { host_path: '/foo' } },
           'primary' => {},

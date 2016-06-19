@@ -3,8 +3,8 @@ module Avsh
   class ParsedConfig
     attr_reader :primary_machine
 
-    # @param vagrantfile_path [String] The path to the Vagrantfile (used for
-    #   synced folder path expansion with relative directories).
+    # @param vagrantfile_dir [String] The directory containing the Vagrantfile
+    # (used for synced folder path expansion with relative directories).
     # @param global_synced_folders [Hash] The globally-defined synced folders,
     #   with keys being the guest directory (destination) and values being the
     #   host directory (source).
@@ -12,9 +12,9 @@ module Avsh
     #   synced folders defined in that machine definition (potentially empty)
     # @param primary_machine [String] The name of the primary machine, if one
     #   was defined
-    def initialize(vagrantfile_path, global_synced_folders,
+    def initialize(vagrantfile_dir, global_synced_folders,
                    machine_synced_folders, primary_machine)
-      @vagrantfile_dir = File.dirname(vagrantfile_path)
+      @vagrantfile_dir = vagrantfile_dir
       @global_synced_folders = global_synced_folders.freeze
       @machine_synced_folders = machine_synced_folders.freeze
       @primary_machine = primary_machine
@@ -31,10 +31,10 @@ module Avsh
 
     def collect_folders_by_machine
       if @machine_synced_folders.empty?
-        { 'default' => add_vagrant_default(@global_synced_folders.dup) }
+        { 'default' => default_synced_folders }
       else
         folders = @machine_synced_folders.map do |name, synced_folders|
-          [name, merge_with_globals(synced_folders)]
+          [name, merge_with_defaults(synced_folders)]
         end
 
         # Sort the primary machine to the top, since it should be matched first
@@ -48,6 +48,13 @@ module Avsh
 
     private
 
+    def default_synced_folders
+      defaults = @global_synced_folders
+                 .reject { |_, opts| opts[:disabled] }
+                 .map { |guest_path, opts| [guest_path, opts[:host_path]] }
+      add_vagrant_default(Hash[defaults])
+    end
+
     def add_vagrant_default(synced_folders)
       # Add default /vagrant share (see https://github.com/mitchellh/vagrant/blob/v1.8.4/plugins/kernel_v2/config/vm.rb#L511)
       if !synced_folders.key?('/vagrant') &&
@@ -57,8 +64,8 @@ module Avsh
       synced_folders
     end
 
-    def merge_with_globals(synced_folders)
-      add_vagrant_default(@global_synced_folders.dup).tap do |merged|
+    def merge_with_defaults(synced_folders)
+      default_synced_folders.tap do |merged|
         synced_folders.each do |guest_path, opts|
           if opts[:disabled]
             merged.delete(guest_path)
