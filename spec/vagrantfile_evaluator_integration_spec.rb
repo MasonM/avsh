@@ -6,6 +6,11 @@ describe 'VagrantfileEvaluator integration tests' do
                                    Avsh::VagrantfileEnvironment.clone)
   end
 
+  before do
+    skip('cloning the VagrantfileEnvironment doesn\'t work under ' \
+         'Ruby 1.9.3') if RUBY_VERSION == '1.9.3'
+  end
+
   def vagrantfile(name)
     File.dirname(__FILE__) + "/vagrantfiles/#{name}"
   end
