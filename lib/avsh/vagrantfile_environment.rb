@@ -7,8 +7,7 @@ module Avsh
     module Vagrant
       VERSION = '1.8.3'.freeze
 
-      # rubocop:disable Style/PredicateName
-      def self.has_plugin?(*)
+      def self.has_plugin?(*) # rubocop:disable Style/PredicateName
         # Just lie and say we have the plugin, because a Vagrantfile that calls
         # this is probably doing dependency checking, and will terminate if this
         # doesn't return true. However, this could result in unwanted behavior
@@ -16,7 +15,6 @@ module Avsh
         # exist. I can't think of any reason for doing that.
         true
       end
-      # rubocop:enable all
 
       def self.configure(*)
         yield FakeVagrantConfig

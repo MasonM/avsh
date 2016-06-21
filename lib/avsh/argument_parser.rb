@@ -4,8 +4,7 @@ module Avsh
   # Handles parsing ARGV to extract avsh options, ssh arguments, and the command
   # to run
   class ArgumentParser
-    # rubocop:disable Metrics/MethodLength
-    def parse(argv)
+    def parse(argv) # rubocop:disable Metrics/MethodLength
       @options = {
         machine: nil,
         debug: false,
@@ -29,7 +28,6 @@ module Avsh
         [@options, remaining_args.join(' ')]
       end
     end
-    # rubocop:enable all
 
     private
 
@@ -40,8 +38,7 @@ module Avsh
       [@options, @options[:command]]
     end
 
-    # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    def parser
+    def parser # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       OptionParser.new do |opts|
         opts.banner = 'Usage: avsh [options] [--] [command]'
 
@@ -80,6 +77,5 @@ module Avsh
         end
       end
     end
-    # rubocop:enable all
   end
 end
