@@ -25,7 +25,11 @@ for possible_ruby in "/opt/vagrant/embedded/bin/ruby" "/Applications/Vagrant/emb
   fi
 done
 
-echo "avsh was unable to find a suitable Ruby interpreter"
+echo "avsh was unable to find a suitable Ruby interpreter.
+
+This usually means Vagrant was not installed via your OS package manager or https://www.vagrantup.com/downloads.html
+
+If that is not the case, please file an issue at https://github.com/MasonM/avsh/issues/new and include how you installed Vagrant"
 exit 1
 
 #!ruby
