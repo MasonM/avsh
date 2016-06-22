@@ -87,8 +87,8 @@ module Avsh
     def ssh_master_socket_cmd
       [
         'ssh',
-        # Don't execute a command, just go in background immediately
-        '-f', '-N',
+        # Don't execute a command
+        '-N',
         # Read the SSH config from stdin. Note that /dev/stdin isn't in the
         # POSIX standard, but I don't know of any modern Unix that doesn't have
         # it.

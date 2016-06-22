@@ -57,7 +57,7 @@ module Avsh
           @options[:ssh_args] = args.strip
         end
 
-        opts.on('-d', '--debug', 'Enable debugging mode') do
+        opts.on('-d', '--debug', 'Verbosely print debugging info to STDOUT') do
           @options[:debug] = true
         end
 
