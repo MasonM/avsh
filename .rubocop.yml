@@ -11,4 +11,4 @@ AllCops:
     - 'vendor/**/*'
 
 Metrics/MethodLength:
-  Max: 15
+  Max: 20

@@ -10,7 +10,7 @@ describe Avsh::MachineGuestDirMatcher do
   context 'with non-existent desired machine' do
     it 'raises exception' do
       allow(stub_config).to receive(:collect_folders_by_machine)
-      allow(stub_config).to receive(:machine?).with('foo').and_return(false)
+        .and_raise(Avsh::MachineNotFoundError.new('foo', '/'))
       expect { subject.match('/', 'foo') }
         .to raise_error(Avsh::MachineNotFoundError)
     end
@@ -20,20 +20,20 @@ describe Avsh::MachineGuestDirMatcher do
     context 'without synced folders' do
       it 'uses the desired machine' do
         allow(stub_config).to receive_messages(
-          collect_folders_by_machine: {},
-          machine?: true
+          collect_folders_by_machine: { 'machine1' => {} },
+          match_machines!: ['machine1']
         )
-        expect(subject.match('/', 'machine1')).to eq ['machine1', nil]
+        expect(subject.match('/', 'machine1')).to eq('machine1' => nil)
       end
     end
 
     context 'no matching synced folders' do
       it 'uses the desired machine' do
         allow(stub_config).to receive_messages(
-          collect_folders_by_machine: { machine1: { '/bar' => '/foo' } },
-          machine?: true
+          collect_folders_by_machine: { 'machine1' => { '/bar' => '/foo' } },
+          match_machines!: ['machine1']
         )
-        expect(subject.match('/', 'machine1')).to eq ['machine1', nil]
+        expect(subject.match('/', 'machine1')).to eq('machine1' => nil)
       end
     end
 
@@ -45,10 +45,10 @@ describe Avsh::MachineGuestDirMatcher do
             'machine2' => { '/baz' => '/bam', '/bar2' => '/foo' },
             'machine3' => {}
           },
-          machine?: true
+          match_machines!: ['machine2']
         )
         expect(subject.match('/foo/foo2/', 'machine2'))
-          .to eq ['machine2', '/bar2/foo2']
+          .to eq('machine2' => '/bar2/foo2')
       end
     end
   end
@@ -60,7 +60,7 @@ describe Avsh::MachineGuestDirMatcher do
           collect_folders_by_machine: {},
           primary_machine: 'machine1'
         )
-        expect(subject.match('/')).to eq ['machine1', nil]
+        expect(subject.match('/')).to eq('machine1' => nil)
       end
 
       it 'uses the first machine if no primary machine exists' do
@@ -69,7 +69,7 @@ describe Avsh::MachineGuestDirMatcher do
           primary_machine: nil,
           first_machine: 'machine2'
         )
-        expect(subject.match('/')).to eq ['machine2', nil]
+        expect(subject.match('/')).to eq('machine2' => nil)
       end
     end
   end
@@ -79,7 +79,7 @@ describe Avsh::MachineGuestDirMatcher do
       allow(stub_config).to receive_messages(
         collect_folders_by_machine: { 'machine1' => { '/baz' => '/bam' } }
       )
-      expect(subject.match('/bam/')).to eq ['machine1', '/baz/']
+      expect(subject.match('/bam/')).to eq('machine1' => '/baz/')
     end
   end
 
@@ -92,7 +92,7 @@ describe Avsh::MachineGuestDirMatcher do
           'machine3' => { '/bar' => '/foo' }
         }
       )
-      expect(subject.match('/foo/foo2/')).to eq ['machine2', '/bar2/foo2']
+      expect(subject.match('/foo/foo2/')).to eq('machine2' => '/bar2/foo2')
     end
   end
 end

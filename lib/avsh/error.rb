@@ -16,9 +16,19 @@ module Avsh
   end
 
   # Indicates user tried to specify multiple machines to run against
-  class MultipleMachinesError < Error
+  class VagrantCompatibilityModeMultipleMachinesError < Error
     def initialize
-      super('Cannot specify multiple machines to execute the command against.')
+      super('Cannot specify multiple machines to execute a command against ' \
+            'using the "-c" flag.')
+    end
+  end
+
+  # Indicates user specified an invalid regexp for the "--machine" option
+  class MachineRegexpError < Error
+    def initialize(e)
+      super('avsh got an error parsing the regexp given for the "--machine" ' \
+        ":\n" + e.inspect)
+      set_backtrace e.backtrace
     end
   end
 
@@ -31,12 +41,12 @@ module Avsh
     end
   end
 
-  # Indicates user specified a machine with the "--machine" argument, but it
+  # Indicates user specified machine with the "--machine" option, but it
   # wasn't found in the Vagrantfile
   class MachineNotFoundError < Error
-    def initialize(machine_name, vagrantfile_path)
+    def initialize(machine_name, vagrantfile_dir)
       super("avsh could\'t find the machine named '#{machine_name}' in the " \
-        "Vagrantfile located at '#{vagrantfile_path}'")
+        "Vagrantfile located at '#{vagrantfile_dir}'")
     end
   end
 
@@ -48,6 +58,15 @@ module Avsh
         'This usually means you need to specify the VAGRANT_CWD ' \
         'environment variable. See README.md for details.'
       )
+    end
+  end
+
+  # Indicates user specified multiple machines, but no command
+  class NoCommandWithMultipleMachinesError < Error
+    def initialize
+      super('Multiple machines were specified via the --machine option, but ' \
+            'no command was given. Omitting the command normally starts a ' \
+            'login shell, but that I don\'t know which machine to use.')
     end
   end
 

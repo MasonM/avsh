@@ -1,34 +1,53 @@
 # Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh/coverage)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
-of `vagrant ssh`. It provides greatly increased performance via SSH multiplexing
-and extra features for working on synced projects.
+of `vagrant ssh`. It provides greatly increased performance and many extra
+features.
 
-```sh
-$ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- vagrant ssh -c 'hostname'
-vagrant-ubuntu-trusty-64
-Connection to 127.0.0.1 closed.
-WALL TIME=2.96s CPU=80%
+## Features
 
-$ /usr/bin/time -f 'WALL TIME=%es CPU=%P' -- avsh 'hostname'
-vagrant-ubuntu-trusty-64
-WALL TIME=0.08s CPU=51%
-```
+* **SSH Multiplexing** avsh automatically establishes an SSH control socket the
+  first time it's run, which speeds up all subsequent connections by over an
+  order of magnitude.
 
-avsh detects when you're working in a synced folder, and automatically switches
-to the corresponding directory on the guest before executing commands or
-starting a login shell.
+        ```sh
+        $ time vagrant ssh -c 'hostname'
+        vagrant-ubuntu-trusty-64
+        Connection to 127.0.0.1 closed.
 
-```sh
-$ echo "host=`hostname`, current directory=$PWD"
-host=masons-laptop, current directory=/home/masonm/asci/content
+        real    0m2.786s
+        user    0m1.670s
+        sys     0m0.545s
 
-$ avsh 'echo "host=`hostname`, current directory=$PWD"'
-host=www.jci.dev, current directory=/var/www/jci/content
+        $ time avsh hostname
+        vagrant-ubuntu-trusty-64
+        Shared connection to 127.0.0.1 closed.
 
-$ avsh 'grep synced_folder /vagrant/Vagrantfile'
-  config.vm.synced_folder '/home/masonm/asci/', '/var/www/jci'
-```
+        real    0m0.087s
+        user    0m0.034s
+        sys     0m0.013s
+        ```
+
+* **Automatic synced folder switching** avsh detects when you're working in a
+  synced folder, and automatically switches to the corresponding directory on
+  the guest before executing commands or starting a login shell.
+
+        ```sh
+        # in this example, /home/masonm/asci is synced to /var/www/jci on the guest
+
+        $ echo "host=`hostname`, current directory=$PWD"
+        host=masons-laptop, current directory=/home/masonm/asci/content
+
+        $ avsh 'echo "host=`hostname`, current directory=$PWD"'
+        host=vagrant-ubuntu-trusty-64, current directory=/var/www/jci/content
+        ```
+
+* **Run commands on multiple machines** If you have a multi-machine setup, you
+  can use `avsh -m` to run a command on multiple machines.
+
+        ```sh
+        $ avsh -m 'web,db' df -h
+        ```
 
 ## Caveats
 

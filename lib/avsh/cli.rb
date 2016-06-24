@@ -20,29 +20,31 @@ module Avsh
       exit 1
     end
 
-    # rubocop:disable Metrics/AbcSize
     def execute_command(host_directory, command, options)
       logger = DebugLogger.new(options[:debug])
       logger.debug "Executing command '#{command}' with options '#{options}'"
 
+      config = extract_vagrant_config(logger, host_directory)
+
+      dispatcher(logger, vagrantfile_path, config).dispatch(host_directory,
+                                                            command, options)
+    end
+
+    private
+
+    def extract_vagrant_config(logger, host_directory)
       finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
       vagrantfile_path = finder.find(host_directory)
 
       evaluator = VagrantfileEnvironment::Loader.new(logger)
-      config = evaluator.load_vagrantfile(vagrantfile_path)
-
-      matcher = MachineGuestDirMatcher.new(logger, vagrantfile_path, config)
-      machine_name, guest_dir = matcher.match(host_directory, options[:machine])
-
-      multiplex_manager = SshMultiplexManager.new(logger, machine_name,
-                                                  vagrantfile_path,
-                                                  @vagrant_home)
-      multiplex_manager.initialize_socket_if_needed(options[:reconnect])
-
-      executor = SshCommandExecutor.new(logger, machine_name,
-                                        multiplex_manager.controlmaster_path)
-      executor.execute(command, guest_dir, options[:ssh_args])
+      evaluator.load_vagrantfile(vagrantfile_path)
     end
-    # rubocop:enable all
+
+    def dispatcher(logger, vagrantfile_path, config)
+      matcher = MachineGuestDirMatcher.new(logger, vagrantfile_path, config)
+      multiplex_manager = SshMultiplexManager.new(logger, vagrantfile_path,
+                                                  @vagrant_home)
+      CommandDispatcher.new(logger, multiplex_manager, matcher)
+    end
   end
 end

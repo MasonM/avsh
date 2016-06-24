@@ -3,17 +3,51 @@ require 'open3'
 module Avsh
   # Manages SSH multiplexing
   class SshMultiplexManager
-    def initialize(logger, machine_name, vagrantfile_path, vagrant_home)
+    def initialize(logger, vagrantfile_path, vagrant_home)
       @logger = logger
-      @machine_name = machine_name
       @vagrantfile_dir = File.dirname(vagrantfile_path)
       @vagrant_home = File.expand_path(vagrant_home)
     end
 
-    def initialize_socket_if_needed(reconnect = false)
-      close_ssh_socket if reconnect && File.socket?(controlmaster_path)
-      initialize_socket unless File.socket?(controlmaster_path)
+    def controlpath_option(machine_name)
+      "-o ControlPath #{controlmaster_path(machine_name)}"
     end
+
+    def active?(machine_name)
+      File.socket?(controlmaster_path(machine_name))
+    end
+
+    def initialize_socket(machine_name)
+      @logger.debug("Establishing control socket for '#{machine_name}' " \
+                    "at '#{controlmaster_path(machine_name)}'")
+
+      ssh_config = read_vagrant_ssh_config(machine_name)
+      command = ssh_master_socket_cmd(machine_name)
+
+      @logger.debug "Executing SSH command '#{command}'"
+      Open3.popen3(*command) do |stdin, _stdout, stderr, _|
+        raise SshMasterSocketError, stderr.read if stdin.closed?
+        stdin.puts(ssh_config)
+        stdin.close
+      end
+    end
+
+    def close_socket(machine_name)
+      ssh_cmd = [
+        'ssh',
+        '-O', 'exit',
+        controlpath_option(machine_name),
+        machine_name
+      ]
+      @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
+      stdout_and_stderr, status = Open3.capture2e(*ssh_cmd)
+      unless status.success?
+        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), status,
+                                         stdout_and_stderr)
+      end
+    end
+
+    private
 
     # Returns the path to the socket file for the multiplex connection.
     # We put the socket file in Vagrant's temp directory because that doesn't
@@ -26,46 +60,14 @@ module Avsh
     # to worry about the socket disappearing, but that could change in the
     # future. If that happens, I'll probably have to add a config option to let
     # users specify the path.
-    def controlmaster_path
-      "#{@vagrant_home}/tmp/avsh_#{@machine_name}_controlmaster.sock"
-    end
-
-    private
-
-    def initialize_socket
-      @logger.debug("Establishing control socket for '#{@machine_name}' " \
-        "at '#{controlmaster_path}'")
-
-      ssh_config = read_vagrant_ssh_config
-
-      @logger.debug "Executing SSH command '#{ssh_master_socket_cmd}'"
-
-      Open3.popen3(*ssh_master_socket_cmd) do |stdin, _stdout, stderr, _|
-        raise SshMasterSocketError, stderr.read if stdin.closed?
-        stdin.puts(ssh_config)
-        stdin.close
-      end
-    end
-
-    def close_ssh_socket
-      ssh_cmd = [
-        'ssh',
-        '-O', 'exit',
-        "-o ControlPath #{controlmaster_path}",
-        @machine_name
-      ]
-      @logger.debug "Closing SSH connection with command '#{ssh_cmd}'"
-      stdout_and_stderr, status = Open3.capture2e(*ssh_cmd)
-      unless status.success?
-        raise SshMultiplexCloseError.new(ssh_cmd.join(' '), status,
-                                         stdout_and_stderr)
-      end
+    def controlmaster_path(machine_name)
+      "#{@vagrant_home}/tmp/avsh_#{machine_name}_controlmaster.sock"
     end
 
     # Runs "vagrant ssh-config" to get the SSH config, which is needed so we
     # can establish a control socket using SSH directly.
-    def read_vagrant_ssh_config
-      ssh_config_command = ['vagrant', 'ssh-config', @machine_name]
+    def read_vagrant_ssh_config(machine_name)
+      ssh_config_command = ['vagrant', 'ssh-config', machine_name]
       @logger.debug('Executing vagrant ssh-config command: ' +
                     ssh_config_command.to_s)
       stdout_and_stderr, status = Open3.capture2e(
@@ -75,16 +77,14 @@ module Avsh
       unless status.success?
         human_readable_command =
           "VAGRANT_CWD=#{@vagrantfile_dir} " + ssh_config_command.join(' ')
-        raise VagrantSshConfigError.new(@machine_name, human_readable_command,
+        raise VagrantSshConfigError.new(machine_name, human_readable_command,
                                         status, stdout_and_stderr)
       end
-      @logger.debug "Got SSH config for #{@machine_name}: #{stdout_and_stderr}"
+      @logger.debug "Got SSH config for #{machine_name}: #{stdout_and_stderr}"
       stdout_and_stderr
     end
 
-    # This is mostly based off
-    # https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing
-    def ssh_master_socket_cmd
+    def ssh_master_socket_cmd(machine_name)
       [
         'ssh',
         # Don't execute a command
@@ -100,9 +100,9 @@ module Avsh
         # Auto-connect
         '-o ControlMaster auto',
         # Path to control socket
-        "-o ControlPath #{controlmaster_path}",
+        controlpath_option(machine_name),
         # This is the hostname returned by "vagrant ssh-config"
-        @machine_name
+        machine_name
       ]
     end
   end

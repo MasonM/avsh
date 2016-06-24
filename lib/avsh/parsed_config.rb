@@ -20,8 +20,26 @@ module Avsh
       @primary_machine = primary_machine
     end
 
-    def machine?(machine_name)
-      @machine_synced_folders.key?(machine_name)
+    # Returns the machines that match the given search string, raising an
+    # exception if no matches are found.
+    # Partially based off https://github.com/mitchellh/vagrant/blob/85f1e05e2a9bf7a7940bb4498472b809ba43e01f/lib/vagrant/plugin/v2/command.rb#L183
+    def match_machines!(search_string)
+      machines =
+        if (pattern = search_string[%r{^/(.+?)/$}, 1])
+          match_machines_by_regexp(pattern)
+        elsif search_string.include? ','
+          # Recursively call this function to match all machines in the list,
+          # raising an exception if any could not be found
+          search_string.split(',')
+                       .map! { |s| match_machines!(s.strip) }
+                       .flatten
+        elsif @machine_synced_folders.key?(search_string)
+          [search_string]
+        end
+      unless machines && !machines.empty?
+        raise MachineNotFoundError.new(search_string, @vagrantfile_dir)
+      end
+      machines
     end
 
     def first_machine
@@ -47,6 +65,15 @@ module Avsh
     end
 
     private
+
+    def match_machines_by_regexp(pattern)
+      begin
+        regex = Regexp.new(pattern)
+      rescue RegexpError => e
+        raise MachineRegexpError, e
+      end
+      @machine_synced_folders.keys.select { |name| name =~ regex }
+    end
 
     def default_synced_folders
       defaults = @global_synced_folders

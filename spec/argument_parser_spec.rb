@@ -89,7 +89,7 @@ describe Avsh::ArgumentParser do
 
     context 'with multiple machines in place of normal command' do
       it_behaves_like 'raises exception', ['-c', 'foo', 'machine1', 'machine2'],
-                      Avsh::MultipleMachinesError
+                      Avsh::VagrantCompatibilityModeMultipleMachinesError
     end
   end
 end

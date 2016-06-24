@@ -12,24 +12,26 @@ module Avsh
 
     # Tries to match host directory against synced_folder declarations, then
     # falls back to the default
-    def match(host_directory, desired_machine = nil)
+    def match(host_directory, machine_search_string = nil)
+      real_host_directory = File.expand_path(host_directory)
       synced_folders_by_machine = @vagrant_config.collect_folders_by_machine
 
-      if desired_machine
-        unless @vagrant_config.machine?(desired_machine)
-          raise MachineNotFoundError.new(desired_machine, @vagrantfile_path)
+      if machine_search_string
+        machines = @vagrant_config.match_machines!(machine_search_string)
+        if machines.length > 1
+          # Don't do synced folder matching for multiple machines, as that could
+          # lead to unexpected results.
+          Hash[machines.map { |machine| [machine, nil] }]
+        else
+          synced_folders = synced_folders_by_machine[machines[0]]
+          match = match_synced_folder(real_host_directory, synced_folders)
+          { machines[0] => match }
         end
-        # Prune other machines so we're only matching against the desired
-        # machine's synced folders.
-        synced_folders_by_machine.keep_if do |machine_name, _|
-          machine_name == desired_machine
-        end
+      else
+        match = match_machine_and_synced_folders(real_host_directory,
+                                                 synced_folders_by_machine)
+        match || default_fallback(real_host_directory)
       end
-
-      real_host_directory = File.expand_path(host_directory)
-      match = match_machine_and_synced_folders(real_host_directory,
-                                               synced_folders_by_machine)
-      match || default_fallback(real_host_directory, desired_machine)
     end
 
     private
@@ -45,18 +47,18 @@ module Avsh
         @logger.debug("Found guest path for '#{host_directory}' with " \
                       "machine '#{machine_name}' and directory " \
                       "'#{guest_dir}'")
-        return machine_name, guest_dir
+        return Hash[machine_name, guest_dir]
       end
       nil
     end
 
-    def default_fallback(host_directory, desired_machine = nil)
-      default_machine = desired_machine || @vagrant_config.primary_machine ||
+    def default_fallback(host_directory)
+      default_machine = @vagrant_config.primary_machine ||
                         @vagrant_config.first_machine
       @logger.debug('Couldn\'t find guest directory for ' \
         "'#{host_directory}', falling back to #{default_machine} for " \
         'the machine and nothing for guest directory')
-      [default_machine, nil]
+      { default_machine => nil }
     end
 
     def match_synced_folder(host_directory, folders)

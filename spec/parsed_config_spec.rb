@@ -16,8 +16,9 @@ describe Avsh::ParsedConfig do
   context 'with single machine' do
     subject { described_class.new('/va', {}, {}, nil) }
 
-    it 'returns false in machine?' do
-      expect(subject.machine?('foo')).to be false
+    it 'raises exception in match_machines' do
+      expect { subject.match_machines!('foo') }
+        .to raise_error(Avsh::MachineNotFoundError)
     end
 
     it 'returns \'default\' in first_machine' do
@@ -75,12 +76,42 @@ describe Avsh::ParsedConfig do
       )
     end
 
-    it 'returns false in machine? when given non-existent machine' do
-      expect(subject.machine?('foo')).to be false
-    end
+    context 'match_machines!' do
+      it 'raises exception with a non-existent machine' do
+        expect { subject.match_machines!('foo') }
+          .to raise_error(Avsh::MachineNotFoundError)
+      end
 
-    it 'returns true in machine? when given valid machine' do
-      expect(subject.machine?('overrides_defaults')).to be true
+      it 'returns array with the machine given a valid machine as a string' do
+        expect(subject.match_machines!('overrides_defaults'))
+          .to eq ['overrides_defaults']
+      end
+
+      it 'returns array of machines given a valid comma-separated list' do
+        expect(subject.match_machines!('primary, overrides_defaults, first'))
+          .to eq %w(primary overrides_defaults first)
+      end
+
+      it 'raises exception given comma-separated list with invalid machine' do
+        expect { subject.match_machines!('primary, foo') }
+          .to raise_error(Avsh::MachineNotFoundError)
+      end
+
+      it 'returns array of machines given valid regular expression' do
+        expect(subject.match_machines!('/prim.*y/')).to eq ['primary']
+        expect(subject.match_machines!('/first|override/'))
+          .to eq %w(first overrides_defaults)
+      end
+
+      it 'raises exception given invalid regexp' do
+        expect { subject.match_machines!('/foo(/') }
+          .to raise_error(Avsh::MachineRegexpError)
+      end
+
+      it 'raises exception given regexp that doesn\'t match anything' do
+        expect { puts subject.match_machines!('/dlsfks/') }
+          .to raise_error(Avsh::MachineNotFoundError)
+      end
     end
 
     it 'returns name of first machine in first_machine' do

@@ -4,7 +4,7 @@ module Avsh
   # Handles parsing ARGV to extract avsh options, ssh arguments, and the command
   # to run
   class ArgumentParser
-    def parse(argv) # rubocop:disable Metrics/MethodLength
+    def parse(argv)
       @options = {
         machine: nil,
         debug: false,
@@ -32,23 +32,30 @@ module Avsh
     private
 
     def vagrant_ssh_compatibility_mode(remaining_args)
-      raise VagrantCompatibilityModeMachineError, @options if @options[:machine]
-      raise MultipleMachinesError if remaining_args.length > 1
+      if @options[:machine] # rubocop:disable Style/GuardClause
+        raise VagrantCompatibilityModeMachineError, @options
+      elsif remaining_args.length > 1
+        raise VagrantCompatibilityModeMultipleMachinesError
+      end
       @options[:machine] = remaining_args[0]
       [@options, @options[:command]]
     end
 
     def parser # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       OptionParser.new do |opts|
-        opts.banner = 'Usage: avsh [options] [--] [command]'
+        opts.banner = banner_usages + "\nOptions:"
 
-        opts.on('-m', '--machine MACHINE', 'Target Vagrant machine',
-                '(if not given, will infer from Vagrantfile. See README.md ' \
-                'for details.)') do |machine|
+        opts.on('-m', '--machine MACHINE', 'Target Vagrant machine(s).',
+                'Can be specified as a plain string for a single machine, a',
+                'comma-separated list for multiple machines, or a regular ',
+                'expression in the form /search/ for one or more machines.',
+                'If not given, will infer from the Vagrantfile. See README.md '\
+                'for details.') do |machine|
           @options[:machine] = machine.strip
         end
 
-        opts.on('-r', '--reconnect', 'Re-initialize SSH connection') do
+        opts.on('-r', '--reconnect', 'Closes SSH multiplex socket if present' \
+                ' and re-initializes it') do
           @options[:reconnect] = true
         end
 
@@ -66,7 +73,7 @@ module Avsh
           exit
         end
 
-        opts.on('-h', '--help', 'Displays help') do
+        opts.on('-h', '--help', 'Display help') do
           puts opts.help
           exit
         end
@@ -75,6 +82,20 @@ module Avsh
                 'compatibility with Vagrant SSH)') do |cmd|
           @options[:command] = cmd
         end
+      end
+    end
+
+    def banner_usages
+      lines = {
+        'Usage: avsh [options] -- COMMAND' => 'execute given command via SSH',
+        '   or: avsh [options]' => 'start a login shell',
+        '   or: avsh -c COMMAND' => 'execute given command via SSH (for ' \
+        'compatibility with "vagrant ssh")'
+      }
+      max_chars_left = lines.keys.map(&:length).max
+      padding = 4
+      lines.reduce('') do |memo, line|
+        memo + line[0].ljust(max_chars_left + padding) + line[1] + "\n"
       end
     end
   end
