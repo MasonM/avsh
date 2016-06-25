@@ -35,7 +35,7 @@ describe 'integration tests for loading vagrant files' do
 
     it 'has a single machine named "hss"' do
       expect(parsed_config.first_machine).to eq 'hss'
-      expect(parsed_config.machine?('hss')).to be true
+      expect(parsed_config.match_machines!('/hs+/')).to eq ['hss']
     end
 
     it 'has the default synced folder and one defined synced folder' do
@@ -55,8 +55,8 @@ describe 'integration tests for loading vagrant files' do
 
     it 'has two machines, z1c and z1f' do
       expect(parsed_config.first_machine).to eq 'z1c'
-      expect(parsed_config.machine?('z1c')).to be true
-      expect(parsed_config.machine?('z1f')).to be true
+      expect(parsed_config.match_machines!('/z1./')).to eq %w(z1c z1f)
+      expect(parsed_config.match_machines!('z1c')).to eq ['z1c']
     end
 
     it 'has the default synced folder for both machines' do

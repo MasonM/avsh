@@ -43,7 +43,7 @@ module Avsh
     private
 
     def ssh_args(user_ssh_args)
-      args = @multiplex_manager.controlpath_option(@machine_name)
+      args = [@multiplex_manager.controlpath_option(@machine_name)]
       unless user_ssh_args.include?('-t') || user_ssh_args.include?('-T')
         # Default to TTY allocation, as that's what Vagrant does.
         # See https://github.com/mitchellh/vagrant/blob/fc1d2c29be6b19b9ee19c063e15f72283140ec8e/lib/vagrant/action/builtin/ssh_run.rb#L47
