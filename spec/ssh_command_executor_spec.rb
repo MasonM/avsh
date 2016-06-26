@@ -79,15 +79,23 @@ describe Avsh::SshCommandExecutor do
     end
 
     context 'non-interactively' do
-      it 'spawns and detaches process successfully' do
+      before do
         allow(stub_multiplex_manager)
           .to receive(:controlpath_option).and_return 'foo'
+      end
 
+      it 'returns immediately if process exits successfully' do
         expect(Kernel).to receive(:system)
           .with('ssh', 'foo', '-T', machine_name, 'ls /')
           .and_return(true)
 
         subject.execute('ls /', nil, false, '-T')
+      end
+
+      it 'receives error and raises an exception' do
+        expect(Kernel).to receive(:system).and_return(false)
+        expect { subject.execute('ls', nil, false) }
+          .to raise_error(Avsh::SubshellSshError)
       end
     end
   end

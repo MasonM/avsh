@@ -74,7 +74,17 @@ module Avsh
   class ExecSshError < Error
     def initialize
       super('avsh failed to pass control to SSH. Please file a bug at ' \
-        'https://github.com/MasonM/avsh/issues')
+        'https://github.com/MasonM/avsh/issues if you\'re on one of the ' \
+        'supported platforms.')
+    end
+  end
+
+  # Indicates failures to execute a SSH command in a subshell via
+  # Kernel.system()
+  class SubshellSshError < Error
+    def initialize(command, machine_name, exit_status)
+      super("avsh got an error while executing the command '#{command}' on " \
+            "the machine '#{machine_name}'\nExit status: #{exit_status}")
     end
   end
 
