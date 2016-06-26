@@ -118,6 +118,13 @@ module Avsh
           # Re-raise with a more specific exception
           raise VagrantfileEvalError.new(vagrantfile_path, e)
         ensure
+          # Clean up global namespace. This is really just for the tests, since
+          # this isn't going to be called multiple times when executed normally.
+          #
+          # We could remove _all_ constants that were added by calling
+          # Object.constants before and after the load and doing a diff, but
+          # that will cause issues with classes that are require()d, since they
+          # won't get reloaded if require() is called again.
           Object.send(:remove_const, :Vagrant)
           if Object.const_defined?(:VAGRANTFILE_API_VERSION)
             Object.send(:remove_const, :VAGRANTFILE_API_VERSION)
