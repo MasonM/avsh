@@ -1,7 +1,7 @@
 # Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh/coverage)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
-of `vagrant ssh`. It provides greatly increased performance and many extra
+of `vagrant ssh`. It provides greatly increased performance and several extra
 features.
 
 * **SSH multiplexing** avsh automatically establishes an SSH control socket the
@@ -44,7 +44,7 @@ features.
   can use `avsh -m` to run a command on multiple machines.
 
     ```sh
-    $ avsh -m 'virtualbox_openbsd,docker_debian' uname -a
+    $ avsh -m 'openbsd,debian' uname -a
     OpenBSD vagrantup.localdomain 5.9 GENERIC#1761 amd64
     Linux 58f4a1547365 3.13.0-88-generic #135-Ubuntu SMP Wed Jun 8 21:10:42 UTC 2016 x86_64 GNU/Linux
     ```
@@ -55,9 +55,9 @@ avsh makes a number of assumptions and shortcuts in order to achieve its
 performance goals, so it might not work (or be appropriate) for your setup.
 
 * Vagrantfiles are evaluated inside [a fake Vagrant environment](https://github.com/MasonM/avsh/blob/master/lib/avsh/vagrantfile_environment.rb),
-  which may cause issues with complex Vagrantfiles that have conditional logic
-  using Vagrant's API. Specifically, the `Vagrant.has_plugin?` method always
-  returns true, and other methods on the `Vagrant` module are stubbed out.
+  which may cause issues with complex Vagrantfiles that use the non-DSL parts of
+  Vagrant. Specifically, the `Vagrant.has_plugin?` method always returns true,
+  and other methods on the `Vagrant` module are stubbed out.
 * The host must be Linux with OpenSSH 5.6+ or OS X 10.7+. It'll probably work on
   other Unices, but hasn't been tested.
 * No merging of multiple Vagrantfiles.
@@ -98,12 +98,14 @@ Options:
     -c, --command COMMAND            Command to execute (only for compatibility with Vagrant SSH)
 ```
 
-If the `-m` flag is not given for a multi-machine environment, avsh will infer
-the machine to connect to using the synced folders defined in your Vagrantfile.
-It does this by matching the current working directory against each machine in
-the order they are defined, using the first machine that has a matching synced
-folder (taking into account ancestor directories). If none are found to match,
-it will use [the primary machine](https://www.vagrantup.com/docs/multi-machine/#specifying-a-primary-machine)
+### Multi-Machine Environments
+
+If the `-m` flag is not given for a [multi-machine environment](https://www.vagrantup.com/docs/multi-machine/),
+avsh will try to infer the machine to connect to using the synced folders
+defined in your Vagrantfile. It does this by matching the current working
+directory against each machine in the order they are defined, using the first
+machine that has a matching synced folder (taking into account ancestor
+directories). If none are found to match, it will use [the primary machine](https://www.vagrantup.com/docs/multi-machine/#specifying-a-primary-machine)
 if one exists, else it falls back to the first defined machine.
 
 When executing a command on multiple machines, automatic synced folder switching
