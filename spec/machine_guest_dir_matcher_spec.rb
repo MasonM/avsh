@@ -54,16 +54,34 @@ describe Avsh::MachineGuestDirMatcher do
   end
 
   context 'with machine search string for multiple machines' do
-  end
-
-  context 'without machine search string' do
     it 'returns the machines without specifying guest directories' do
       allow(stub_config).to receive_messages(
         collect_folders_by_machine: { 'machine1' => { '/bar' => '/foo' } },
-        match_machines!: ['machine1', 'machine2']
+        match_machines!: %w(machine1 machine2)
       )
       expect(subject.match('/foo', 'foo,bar'))
         .to eq('machine1' => nil, 'machine2' => nil)
+    end
+  end
+
+  context 'without machine search string' do
+    context 'without synced folders' do
+      it 'uses the primary machine if it exists' do
+        allow(stub_config).to receive_messages(
+          collect_folders_by_machine: {},
+          primary_machine: 'machine1'
+        )
+        expect(subject.match('/')).to eq('machine1' => nil)
+      end
+
+      it 'uses the first machine if no primary machine exists' do
+        allow(stub_config).to receive_messages(
+          collect_folders_by_machine: {},
+          primary_machine: nil,
+          first_machine: 'machine2'
+        )
+        expect(subject.match('/')).to eq('machine2' => nil)
+      end
     end
   end
 
