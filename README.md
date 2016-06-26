@@ -4,50 +4,50 @@ avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
 of `vagrant ssh`. It provides greatly increased performance and many extra
 features.
 
-## Features
-
-* **SSH Multiplexing** avsh automatically establishes an SSH control socket the
+* **SSH multiplexing** avsh automatically establishes an SSH control socket the
   first time it's run, which speeds up all subsequent connections by over an
   order of magnitude.
 
-        ```sh
-        $ time vagrant ssh -c 'hostname'
-        vagrant-ubuntu-trusty-64
-        Connection to 127.0.0.1 closed.
+    ```sh
+    $ time vagrant ssh -c 'hostname'
+    vagrant-ubuntu-trusty-64
+    Connection to 127.0.0.1 closed.
 
-        real    0m2.786s
-        user    0m1.670s
-        sys     0m0.545s
+    real    0m2.786s
+    user    0m1.670s
+    sys     0m0.545s
 
-        $ time avsh hostname
-        vagrant-ubuntu-trusty-64
-        Shared connection to 127.0.0.1 closed.
+    $ time avsh hostname
+    vagrant-ubuntu-trusty-64
+    Shared connection to 127.0.0.1 closed.
 
-        real    0m0.087s
-        user    0m0.034s
-        sys     0m0.013s
-        ```
+    real    0m0.087s
+    user    0m0.034s
+    sys     0m0.013s
+    ```
 
 * **Automatic synced folder switching** avsh detects when you're working in a
   synced folder, and automatically switches to the corresponding directory on
   the guest before executing commands or starting a login shell.
 
-        ```sh
-        # in this example, /home/masonm/asci is synced to /var/www/jci on the guest
+    ```sh
+    # in this example, /home/masonm/asci is synced to /var/www/jci on the guest
 
-        $ echo "host=`hostname`, current directory=$PWD"
-        host=masons-laptop, current directory=/home/masonm/asci/content
+    $ echo "host=`hostname`, current directory=$PWD"
+    host=masons-laptop, current directory=/home/masonm/asci/content
 
-        $ avsh 'echo "host=`hostname`, current directory=$PWD"'
-        host=vagrant-ubuntu-trusty-64, current directory=/var/www/jci/content
-        ```
+    $ avsh 'echo "host=`hostname`, current directory=$PWD"'
+    host=vagrant-ubuntu-trusty-64, current directory=/var/www/jci/content
+    ```
 
 * **Run commands on multiple machines** If you have a multi-machine setup, you
   can use `avsh -m` to run a command on multiple machines.
 
-        ```sh
-        $ avsh -m 'web,db' df -h
-        ```
+    ```sh
+    $ avsh -m 'virtualbox_openbsd,docker_debian' uname -a
+    OpenBSD vagrantup.localdomain 5.9 GENERIC#1761 amd64
+    Linux 58f4a1547365 3.13.0-88-generic #135-Ubuntu SMP Wed Jun 8 21:10:42 UTC 2016 x86_64 GNU/Linux
+    ```
 
 ## Caveats
 
@@ -87,10 +87,3 @@ the synced folders in your Vagrantfile. If none are found to match the current
 directory, it will use the primary machine if one exists, else it falls back to
 the first defined machine. You can use the `avsh -m <machine_name>` to
 explicitly specify the machine you'd like to connect to.
-
-## Why not make this a Vagrant plugin?
-
-Because I couldn't get this to work as a plugin without sacrificing performance.
-The overhead of just getting to the point of executing a command in a plugin is
-nearly 1 second on my computer, and I couldn't find a way to decrease that
-significantly.
