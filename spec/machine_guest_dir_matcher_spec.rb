@@ -7,7 +7,7 @@ describe Avsh::MachineGuestDirMatcher do
     described_class.new(double(debug: nil), '/foo/Vagrantfile', stub_config)
   end
 
-  context 'with non-existent desired machine' do
+  context 'with machine search string specifying non-existent machine' do
     it 'raises exception' do
       allow(stub_config).to receive(:collect_folders_by_machine)
         .and_raise(Avsh::MachineNotFoundError.new('foo', '/'))
@@ -16,9 +16,9 @@ describe Avsh::MachineGuestDirMatcher do
     end
   end
 
-  context 'with desired machine' do
+  context 'with machine search string for single machine' do
     context 'without synced folders' do
-      it 'uses the desired machine' do
+      it 'uses the machine' do
         allow(stub_config).to receive_messages(
           collect_folders_by_machine: { 'machine1' => {} },
           match_machines!: ['machine1']
@@ -28,7 +28,7 @@ describe Avsh::MachineGuestDirMatcher do
     end
 
     context 'no matching synced folders' do
-      it 'uses the desired machine' do
+      it 'uses the machine' do
         allow(stub_config).to receive_messages(
           collect_folders_by_machine: { 'machine1' => { '/bar' => '/foo' } },
           match_machines!: ['machine1']
@@ -38,7 +38,7 @@ describe Avsh::MachineGuestDirMatcher do
     end
 
     context 'multiple inexact matching synced folders' do
-      it 'uses the desired machine and first matching guest dir' do
+      it 'uses the machine and first matching guest dir' do
         allow(stub_config).to receive_messages(
           collect_folders_by_machine: {
             'machine1' => { '/bar' => '/foo' },
@@ -53,24 +53,17 @@ describe Avsh::MachineGuestDirMatcher do
     end
   end
 
-  context 'without desired machine' do
-    context 'without synced folders' do
-      it 'uses the primary machine if it exists' do
-        allow(stub_config).to receive_messages(
-          collect_folders_by_machine: {},
-          primary_machine: 'machine1'
-        )
-        expect(subject.match('/')).to eq('machine1' => nil)
-      end
+  context 'with machine search string for multiple machines' do
+  end
 
-      it 'uses the first machine if no primary machine exists' do
-        allow(stub_config).to receive_messages(
-          collect_folders_by_machine: {},
-          primary_machine: nil,
-          first_machine: 'machine2'
-        )
-        expect(subject.match('/')).to eq('machine2' => nil)
-      end
+  context 'without machine search string' do
+    it 'returns the machines without specifying guest directories' do
+      allow(stub_config).to receive_messages(
+        collect_folders_by_machine: { 'machine1' => { '/bar' => '/foo' } },
+        match_machines!: ['machine1', 'machine2']
+      )
+      expect(subject.match('/foo', 'foo,bar'))
+        .to eq('machine1' => nil, 'machine2' => nil)
     end
   end
 
