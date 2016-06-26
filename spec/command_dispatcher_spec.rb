@@ -30,6 +30,14 @@ describe Avsh::CommandDispatcher do
   end
 
   context 'dispatch with multiple matched machines' do
+    it 'raises an error if command is empty' do
+      allow(stub_matcher).to receive(:match)
+        .and_return('machine1' => nil, 'machine2' => nil)
+
+      expect { subject.dispatch('', '', options) }
+        .to raise_error(Avsh::NoCommandWithMultipleMachinesError)
+    end
+
     it 'executes command on each machine' do
       allow(stub_matcher)
         .to receive(:match).with('/foo', options[:machine])
