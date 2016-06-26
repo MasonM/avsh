@@ -15,8 +15,8 @@ module Avsh
 
       begin
         remaining_args = parser.order!(argv)
-      rescue OptionParser::InvalidOption
-        puts parser
+      rescue OptionParser::ParseError => e
+        puts 'ERROR: ' + e.message + "\n\n" + parser.help
         exit 1
       end
 
@@ -59,9 +59,9 @@ module Avsh
           @options[:reconnect] = true
         end
 
-        opts.on('-s', '--ssh-options ARGS', 'Additional options to pass ' \
-                'to SSH, e.g. "-a -6"') do |args|
-          @options[:ssh_options] = args.strip
+        opts.on('-s', '--ssh-options OPTS', 'Additional options to pass ' \
+                'to SSH, e.g. "-a -6"') do |ssh_options|
+          @options[:ssh_options] = ssh_options.strip
         end
 
         opts.on('-d', '--debug', 'Verbosely print debugging info to STDOUT') do
@@ -87,10 +87,8 @@ module Avsh
 
     def banner_usages
       lines = {
-        'Usage: avsh [options] -- COMMAND' => 'execute given command via SSH',
-        '   or: avsh [options]' => 'start a login shell',
-        '   or: avsh -c COMMAND' => 'execute given command via SSH (for ' \
-        'compatibility with "vagrant ssh")'
+        'Usage: avsh [options] [--] COMMAND' => 'execute given command via SSH',
+        '   or: avsh [options]' => 'start a login shell'
       }
       max_chars_left = lines.keys.map(&:length).max
       padding = 4

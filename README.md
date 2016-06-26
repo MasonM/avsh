@@ -81,9 +81,8 @@ Vagrant can always find it.
 ## Usage
 
 ```
-Usage: avsh [options] -- COMMAND    execute given command via SSH
-   or: avsh [options]               start a login shell
-   or: avsh -c COMMAND              execute given command via SSH (for compatibility with "vagrant ssh")
+Usage: avsh [options] [--] COMMAND    execute given command via SSH
+   or: avsh [options]                 start a login shell
 
 Options:
     -m, --machine MACHINE            Target Vagrant machine(s).
@@ -92,7 +91,7 @@ Options:
                                      expression in the form /search/ for one or more machines.
                                      If not given, will infer from the Vagrantfile.
     -r, --reconnect                  Closes SSH multiplex socket if present and re-initializes it
-    -s, --ssh-options ARGS           Additional options to pass to SSH, e.g. "-a -6"
+    -s, --ssh-options OPTS           Additional options to pass to SSH, e.g. "-a -6"
     -d, --debug                      Verbosely print debugging info to STDOUT
     -v, --version                    Display version
     -h, --help                       Display help
