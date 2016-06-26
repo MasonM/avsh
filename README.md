@@ -59,31 +59,54 @@ performance goals, so it might not work (or be appropriate) for your setup.
   using Vagrant's API. Specifically, the `Vagrant.has_plugin?` method always
   returns true, and other methods on the `Vagrant` module are stubbed out.
 * The host must be Linux with OpenSSH 5.6+ or OS X 10.7+. It'll probably work on
-  other Unices, but hasn't been tested. No limitations on the guest.
+  other Unices, but hasn't been tested.
 * No merging of multiple Vagrantfiles.
 
 ## Installation
 
-Put this script somewhere convenient, and optionally add an alias:
+Download [the latest release](https://raw.githubusercontent.com/masonm/avsh/release-0.0.1/avsh)
+and put in your PATH, or run the following:
 ```sh
-git clone https://github.com/MasonM/avsh.git
+curl -s https://raw.githubusercontent.com/masonm/avsh/release-0.0.1/avsh \
+  | sudo tee /usr/local/bin/avsh > /dev/null \
+    && sudo chmod ugo+rx /usr/local/bin/avsh
 
-# optional:
-echo "alias avsh=\"VAGRANT_CWD='/path/to/vagrant' $(pwd)/avsh/avsh\"" >> ~/.bashrc
 ```
-avsh uses the same `VAGRANT_CWD` environment variable that Vagrant uses to
-determine the directory containing the Vagrantfile, defaulting to the current
-directory.
+
+avsh uses [the same logic as Vagrant](https://www.vagrantup.com/docs/vagrantfile/#lookup-path)
+to find your Vagrantfile.  If you only use a single Vagrantfile, add `export
+VAGRANT_CWD="/vagrantfile_dir/"` to your .bashrc or .zshrc to ensure avsh and
+Vagrant can always find it.
 
 ## Usage
 
-Run `avsh <command>` to execute a command in the guest machine, or just `avsh`
-for a login shell. If you're in a synced folder, it will change to the
-corresponding directory on the guest before running the command or starting the
-shell.
+```
+Usage: avsh [options] -- COMMAND    execute given command via SSH
+   or: avsh [options]               start a login shell
+   or: avsh -c COMMAND              execute given command via SSH (for compatibility with "vagrant ssh")
 
-For multi-machine environments, avsh will infer the machine to connect to using
-the synced folders in your Vagrantfile. If none are found to match the current
-directory, it will use the primary machine if one exists, else it falls back to
-the first defined machine. You can use the `avsh -m <machine_name>` to
-explicitly specify the machine you'd like to connect to.
+Options:
+    -m, --machine MACHINE            Target Vagrant machine(s).
+                                     Can be specified as a plain string for a single machine, a
+                                     comma-separated list for multiple machines, or a regular
+                                     expression in the form /search/ for one or more machines.
+                                     If not given, will infer from the Vagrantfile.
+    -r, --reconnect                  Closes SSH multiplex socket if present and re-initializes it
+    -s, --ssh-options ARGS           Additional options to pass to SSH, e.g. "-a -6"
+    -d, --debug                      Verbosely print debugging info to STDOUT
+    -v, --version                    Display version
+    -h, --help                       Display help
+    -c, --command COMMAND            Command to execute (only for compatibility with Vagrant SSH)
+```
+
+If the `-m` flag is not given for a multi-machine environment, avsh will infer
+the machine to connect to using the synced folders defined in your Vagrantfile.
+It does this by matching the current working directory against each machine in
+the order they are defined, using the first machine that has a matching synced
+folder (taking into account ancestor directories). If none are found to match,
+it will use [the primary machine](https://www.vagrantup.com/docs/multi-machine/#specifying-a-primary-machine)
+if one exists, else it falls back to the first defined machine.
+
+When executing a command on multiple machines, automatic synced folder switching
+is disabled, since that can lead to hard-to-predict behavior. Additionally, a
+pseudo-TTY will not be allocated (i.e. SSH will not be passed the '-t' flag).
