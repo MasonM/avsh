@@ -24,7 +24,7 @@ module Avsh
       logger = DebugLogger.new(options[:debug])
       logger.debug "Executing command '#{command}' with options '#{options}'"
 
-      config = extract_vagrant_config(logger, host_directory)
+      vagrantfile_path, config = extract_vagrant_config(logger, host_directory)
 
       dispatcher(logger, vagrantfile_path, config).dispatch(host_directory,
                                                             command, options)
@@ -37,7 +37,7 @@ module Avsh
       vagrantfile_path = finder.find(host_directory)
 
       evaluator = VagrantfileEnvironment::Loader.new(logger)
-      evaluator.load_vagrantfile(vagrantfile_path)
+      [vagrantfile_path, evaluator.load_vagrantfile(vagrantfile_path)]
     end
 
     def dispatcher(logger, vagrantfile_path, config)

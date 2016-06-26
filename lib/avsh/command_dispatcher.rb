@@ -17,7 +17,8 @@ module Avsh
         executor = SshCommandExecutor.new(@logger, machine_name,
                                           @multiplex_manager)
         executor.connect(options[:reconnect])
-        executor.execute(command, guest_dir, options[:ssh_args])
+        executor.execute(command, guest_dir, matches.length == 1,
+                         options[:ssh_options])
       end
     end
   end

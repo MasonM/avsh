@@ -24,7 +24,7 @@ describe Avsh::ArgumentParser do
         machine: nil,
         debug: false,
         reconnect: false,
-        ssh_args: '',
+        ssh_options: '',
         command: nil
       }
       expect(subject.parse(['ls'])).to eq([default_opts, 'ls'])
@@ -62,9 +62,9 @@ describe Avsh::ArgumentParser do
     end
   end
 
-  context 'with custom ssh args' do
-    [['-s', '-6 -T'], ['--ssh-args=-6 -T']].each do |opt|
-      it_behaves_like 'sets option when arg supplied', opt, ssh_args: '-6 -T'
+  context 'with custom ssh options' do
+    [['-s', '-6 -T'], ['--ssh-options=-6 -T']].each do |opt|
+      it_behaves_like 'sets option when arg supplied', opt, ssh_options: '-6 -T'
     end
   end
 
@@ -80,7 +80,7 @@ describe Avsh::ArgumentParser do
           machine: 'machine1',
           debug: false,
           reconnect: false,
-          ssh_args: '',
+          ssh_options: '',
           command: 'ls'
         }
         expect(subject.parse(['-c', 'ls', 'machine1'])).to eq([opts, 'ls'])

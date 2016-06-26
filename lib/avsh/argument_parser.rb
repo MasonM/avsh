@@ -9,7 +9,7 @@ module Avsh
         machine: nil,
         debug: false,
         reconnect: false,
-        ssh_args: '',
+        ssh_options: '',
         command: nil
       }
 
@@ -59,9 +59,9 @@ module Avsh
           @options[:reconnect] = true
         end
 
-        opts.on('-s', '--ssh-args ARGS', 'Additional arguments to pass ' \
+        opts.on('-s', '--ssh-options ARGS', 'Additional options to pass ' \
                 'to SSH, e.g. "-a -6"') do |args|
-          @options[:ssh_args] = args.strip
+          @options[:ssh_options] = args.strip
         end
 
         opts.on('-d', '--debug', 'Verbosely print debugging info to STDOUT') do

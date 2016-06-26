@@ -57,23 +57,38 @@ describe Avsh::SshCommandExecutor do
   end
 
   context 'execute' do
-    context 'with non-empty command and a guest dir' do
-      it_behaves_like 'a normal command', ['ls', '/somedir'], ['-t'],
-                      'cd /somedir; ls'
+    context 'interactively' do
+      context 'with non-empty command and a guest dir' do
+        it_behaves_like 'a normal command', ['ls', '/somedir'], ['-t'],
+                        'cd /somedir; ls'
+      end
+
+      context 'with empty command and a guest dir' do
+        it_behaves_like 'a normal command', ['', '/somedir'], ['-t'],
+                        'cd /somedir; exec $SHELL -l'
+      end
+
+      context 'with non-empty command and no guest dir' do
+        it_behaves_like 'a normal command', ['pwd'], ['-t'], 'pwd'
+      end
+
+      context 'with user SSH args, non-empty command and no guest dir' do
+        it_behaves_like 'a normal command', ['pwd', nil, true, '-T -6'],
+                        ['-T', '-6'], 'pwd'
+      end
     end
 
-    context 'with empty command and a guest dir' do
-      it_behaves_like 'a normal command', ['', '/somedir'], ['-t'],
-                      'cd /somedir; exec $SHELL -l'
-    end
+    context 'non-interactively' do
+      it 'spawns and detaches process successfully' do
+        allow(stub_multiplex_manager)
+          .to receive(:controlpath_option).and_return 'foo'
 
-    context 'with non-empty command and no guest dir' do
-      it_behaves_like 'a normal command', ['pwd'], ['-t'], 'pwd'
-    end
+        expect(Kernel).to receive(:system)
+          .with('ssh', 'foo', '-T', machine_name, 'ls /')
+          .and_return(true)
 
-    context 'with user SSH args, non-empty command and no guest dir' do
-      it_behaves_like 'a normal command', ['pwd', nil, '-T -6'],
-                      ['-T', '-6'], 'pwd'
+        subject.execute('ls /', nil, false, '-T')
+      end
     end
   end
 end

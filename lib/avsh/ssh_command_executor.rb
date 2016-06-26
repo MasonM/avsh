@@ -16,7 +16,8 @@ module Avsh
       end
     end
 
-    def execute(command, guest_directory = nil, user_ssh_args = '')
+    def execute(command, guest_directory = nil, interactive = true,
+                user_ssh_options = '')
       if command.empty?
         # No command, so run a login shell
         command = 'exec $SHELL -l'
@@ -30,27 +31,32 @@ module Avsh
         command = "cd #{guest_directory}; #{command}"
       end
 
-      ssh_command = ['ssh'] + ssh_args(user_ssh_args) + [@machine_name, command]
+      ssh_command = full_ssh_command(command, interactive, user_ssh_options)
       @logger.debug "Executing '#{ssh_command}'"
 
-      # Script execution ends here, since SSH will replace the current process.
-      Kernel.exec(*ssh_command)
+      if interactive
+        # Script execution ends here, since SSH will replace the current process
+        Kernel.exec(*ssh_command)
 
-      # Shouldn't be possible to get to this point
-      raise ExecSshError
+        # Shouldn't be possible to get to this point
+        raise ExecSshError
+      else
+        Kernel.system(*ssh_command)
+      end
     end
 
     private
 
-    def ssh_args(user_ssh_args)
-      args = [@multiplex_manager.controlpath_option(@machine_name)]
-      unless user_ssh_args.include?('-t') || user_ssh_args.include?('-T')
+    def full_ssh_command(command, interactive, user_ssh_options)
+      ssh_options = [@multiplex_manager.controlpath_option(@machine_name)]
+      if interactive && !(user_ssh_options =~ /-[Tt]/)
         # Default to TTY allocation, as that's what Vagrant does.
         # See https://github.com/mitchellh/vagrant/blob/fc1d2c29be6b19b9ee19c063e15f72283140ec8e/lib/vagrant/action/builtin/ssh_run.rb#L47
-        args << '-t'
+        ssh_options << '-t'
       end
-      args += user_ssh_args.split(' ') unless user_ssh_args.empty?
-      args
+      ssh_options += user_ssh_options.split(' ') unless user_ssh_options.empty?
+
+      ['ssh'] + ssh_options + [@machine_name, command]
     end
   end
 end
