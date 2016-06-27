@@ -24,23 +24,19 @@ module Avsh
       logger = DebugLogger.new(options[:debug])
       logger.debug "Executing command '#{command}' with options '#{options}'"
 
-      vagrantfile_path, config = extract_vagrant_config(logger, host_directory)
+      finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
+      vagrantfile_path = finder.find(host_directory)
 
-      dispatcher(logger, vagrantfile_path, config).dispatch(host_directory,
-                                                            command, options)
+      loader = VagrantfileEnvironment::Loader.new(logger)
+      config = loader.load_vagrantfile(vagrantfile_path)
+
+      dispatcher = command_dispatcher(logger, vagrantfile_path, config)
+      dispatcher.dispatch(host_directory, command, options)
     end
 
     private
 
-    def extract_vagrant_config(logger, host_directory)
-      finder = VagrantfileFinder.new(@vagrant_cwd, @vagrantfile_name)
-      vagrantfile_path = finder.find(host_directory)
-
-      evaluator = VagrantfileEnvironment::Loader.new(logger)
-      [vagrantfile_path, evaluator.load_vagrantfile(vagrantfile_path)]
-    end
-
-    def dispatcher(logger, vagrantfile_path, config)
+    def command_dispatcher(logger, vagrantfile_path, config)
       matcher = MachineGuestDirMatcher.new(logger, vagrantfile_path, config)
       multiplex_manager = SshMultiplexManager.new(logger, vagrantfile_path,
                                                   @vagrant_home)
