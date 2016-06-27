@@ -11,19 +11,16 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Mason Malone"]
   spec.email         = ["mason@masonm.org"]
 
-  spec.summary       = 'Faster alternative to "vagrant ssh", with automatic synced folder switching'
+  spec.summary       = 'Faster alternative to "vagrant ssh", with extra features'
   spec.description   = <<-EOF
-  avsh ("Augmented Vagrant sSH") is a standalone script that emulates vagrant ssh, but is much
-  faster and more convenient when working on synced projects. It automatically sets up SSH
-  multiplexing the first time it's run, eliminating SSH connection overhead on subsequent
-  invocations. In addition, it detects when you're working in a synced folder, and automatically
-  switches to the corresponding directory on the guest before executing commands or starting a login
-  shell.
+  avsh ("Augmented Vagrant sSH") is a standalone script that can be used in
+  place of vagrant ssh. It provides greatly increased performance and several
+  extra features.
   EOF
   spec.homepage      = "https://github.com/masonm/avsh"
   spec.license       = "MIT"
 
-  spec.files         = FileList['lib/*.rb', 'test/test*.rb']
+  spec.files         = FileList['lib/*.rb', 'spec/*.spec.rb']
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.12"
