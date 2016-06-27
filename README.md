@@ -44,9 +44,13 @@ features.
   can use `avsh -m` to run a command on multiple machines.
 
     ```sh
-    $ avsh -m 'openbsd,debian' uname -a
-    OpenBSD vagrantup.localdomain 5.9 GENERIC#1761 amd64
-    Linux 58f4a1547365 3.13.0-88-generic #135-Ubuntu SMP Wed Jun 8 21:10:42 UTC 2016 x86_64 GNU/Linux
+    $ avsh -m 'openbsd,debian' uname
+    OpenBSD
+    Linux
+
+    $ avsh -m '/(free|open)bsd/' uname
+    OpenBSD
+    FreeBSD
     ```
 
 ## Caveats
