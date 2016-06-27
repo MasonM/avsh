@@ -93,10 +93,10 @@ module Avsh
         # POSIX standard, but I don't know of any modern Unix that doesn't have
         # it.
         '-F/dev/stdin',
-        # Persist socket until it's been explicitly closed or idle for 3 hours.
+        # Persist socket until it's been explicitly closed or idle for 6 hours.
         # This is a minor precaution against evil maid attacks, though I don't
         # know if that's actually a concern for anyone's Vagrant setup.
-        '-o ControlPersist 3h',
+        '-o ControlPersist 6h',
         # Auto-connect
         '-o ControlMaster auto',
         # Path to control socket
