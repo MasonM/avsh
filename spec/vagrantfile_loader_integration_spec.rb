@@ -1,11 +1,6 @@
 require 'spec_helper'
 
 describe 'integration tests for loading vagrant files' do
-  before do
-    skip('cloning the VagrantfileEnvironment doesn\'t work under ' \
-         'Ruby 1.9.3') if RUBY_VERSION == '1.9.3'
-  end
-
   subject do
     Avsh::VagrantfileEnvironment::Loader.new(double(debug: nil))
   end
@@ -84,6 +79,10 @@ describe 'integration tests for loading vagrant files' do
   end
 
   context 'with Laravel Homestead' do
+    before do
+      skip('homestead requires Ruby 2.0+') if RUBY_VERSION == '1.9.3'
+    end
+
     let!(:parsed_config) do
       # Tell Homestead's Vagrantfile to use our Homestead.yaml file
       # rubocop:disable Style/GlobalVars
