@@ -64,10 +64,10 @@ performance goals, so it might not work (or be appropriate) for your setup.
 
 ## Installation
 
-Download [the latest release](https://raw.githubusercontent.com/masonm/avsh/release-0.0.1/avsh)
+Download [the latest release](https://github.com/MasonM/avsh/releases/download/0.1/avsh)
 and put in your PATH, or run the following:
 ```sh
-curl -s https://raw.githubusercontent.com/masonm/avsh/release-0.0.1/avsh \
+curl -sL https://github.com/MasonM/avsh/releases/download/0.1/avsh \
   | sudo tee /usr/local/bin/avsh > /dev/null \
     && sudo chmod ugo+rx /usr/local/bin/avsh
 
