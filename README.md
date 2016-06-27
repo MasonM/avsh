@@ -31,13 +31,13 @@ features.
   the guest before executing commands or starting a login shell.
 
     ```sh
-    # in this example, /home/masonm/asci is synced to /var/www/jci on the guest
+    # config.vm.synced_folder '/home/masonm/asci/, '/var/www/jci',
 
-    $ echo "host=`hostname`, current directory=$PWD"
-    host=masons-laptop, current directory=/home/masonm/asci/content
+    $ pwd
+    /home/masonm/asci/content
 
-    $ avsh 'echo "host=`hostname`, current directory=$PWD"'
-    host=vagrant-ubuntu-trusty-64, current directory=/var/www/jci/content
+    $ avsh pwd
+    /var/www/jci/content
     ```
 
 * **Run commands on multiple machines** If you have a multi-machine setup, you
