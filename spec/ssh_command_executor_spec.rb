@@ -94,6 +94,10 @@ describe Avsh::SshCommandExecutor do
 
       it 'receives error and raises an exception' do
         expect(Kernel).to receive(:system).and_return(false)
+
+        RSpec::Mocks.configuration.allow_message_expectations_on_nil = true
+        expect($?).to receive(:exitstatus).and_return(1)
+
         expect { subject.execute('ls', nil, false) }
           .to raise_error(Avsh::SubshellSshError)
       end

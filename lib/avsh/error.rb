@@ -82,9 +82,9 @@ module Avsh
   # Indicates failures to execute a SSH command in a subshell via
   # Kernel.system()
   class SubshellSshError < Error
-    def initialize(command, machine_name, exit_status)
+    def initialize(command, machine_name, status)
       super("avsh got an error while executing the command '#{command}' on " \
-            "the machine '#{machine_name}'\nExit status: #{exit_status}")
+            "the machine '#{machine_name}'\nExit status: #{status.exitstatus}")
     end
   end
 

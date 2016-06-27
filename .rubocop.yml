@@ -12,3 +12,8 @@ AllCops:
 
 Metrics/MethodLength:
   Max: 20
+
+Style/SpecialGlobalVars:
+  # Disable this check because I don't want to have to add "require 'English'"
+  # just so I can use $CHILD_STATUS instead of $?
+  Enabled: false

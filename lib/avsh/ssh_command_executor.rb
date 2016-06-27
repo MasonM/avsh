@@ -42,11 +42,7 @@ module Avsh
         raise ExecSshError
       else
         unless Kernel.system(*ssh_command)
-          # Disable rubocop check because I don't want to have to add
-          # "require 'English'" just for this.
-          # rubocop:disable Style/SpecialGlobalVars
           raise SubshellSshError.new(command, @machine_name, $?)
-          # rubocop:enable all
         end
       end
     end
