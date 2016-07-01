@@ -1,6 +1,11 @@
 module Avsh
-  # This module is a horrible hack to parse out the relevant config details from
-  # a Vagrantfile, without incurring the overhead of loading Vagrant.
+  # This module is a hack to parse out the relevant config details from a
+  # Vagrantfile, without incurring the overhead of loading Vagrant, which is
+  # quite substantial.
+  #
+  # I tried making this work as a Vagrant plugin, but I couldn't get the
+  # overhead below 900ms, and my goal is <100ms. Just doing "require 'vagrant'"
+  # is nearly 100ms on my PC.
   module VagrantfileEnvironment
     # Fake Vagrant module that stubs out everything except what's needed to
     # extract config details.

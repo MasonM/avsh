@@ -69,7 +69,7 @@ performance goals, so it might not work (or be appropriate) for your setup.
 ## Installation
 
 Download [the latest release](https://github.com/MasonM/avsh/releases/download/0.1.0/avsh)
-and put in your PATH, or run the following:
+and put it in your PATH, or run the following to put it in /usr/local/bin/:
 ```sh
 curl -sL https://github.com/MasonM/avsh/releases/download/0.1.0/avsh \
   | sudo tee /usr/local/bin/avsh > /dev/null \
@@ -78,7 +78,7 @@ curl -sL https://github.com/MasonM/avsh/releases/download/0.1.0/avsh \
 ```
 
 avsh uses [the same logic as Vagrant](https://www.vagrantup.com/docs/vagrantfile/#lookup-path)
-to find your Vagrantfile.  If you only use a single Vagrantfile, add `export
+to find your Vagrantfile. If you only use a single Vagrantfile, add `export
 VAGRANT_CWD="/vagrantfile_dir/"` to your .bashrc or .zshrc to ensure avsh and
 Vagrant can always find it.
 
