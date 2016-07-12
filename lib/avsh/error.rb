@@ -66,7 +66,7 @@ module Avsh
     def initialize
       super('Multiple machines were specified via the --machine option, but ' \
             'no command was given. Omitting the command normally starts a ' \
-            'login shell, but that I don\'t know which machine to use.')
+            'login shell, but I don\'t know which machine to use.')
     end
   end
 
