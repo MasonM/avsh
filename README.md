@@ -1,8 +1,10 @@
-# Avsh [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh/coverage)
+# Avsh [![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/) [![Build Status](https://travis-ci.org/MasonM/avsh.svg?branch=master)](https://travis-ci.org/MasonM/avsh) [![Code Climate](https://codeclimate.com/github/MasonM/avsh/badges/gpa.svg)](https://codeclimate.com/github/MasonM/avsh) [![Coverage](https://codeclimate.com/github/MasonM/avsh/badges/coverage.svg)](https://codeclimate.com/github/MasonM/avsh/coverage)
 
 avsh ("Augmented Vagrant sSH") is a standalone script that can be used in place
 of `vagrant ssh`. It provides greatly increased performance and several extra
 features.
+
+This project is unmaintained since I no longer use Vagrant, but I'll accept PRs.
 
 * **SSH multiplexing** avsh automatically establishes an SSH control socket the
   first time it's run, which speeds up all subsequent connections by over an
